@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Course des Scarabées - Dune Chantante</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Comic Sans MS', cursive;
+      background: linear-gradient(to bottom, #fceabb, #f8b500);
+      color: #222;
+    }
+    #wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 0;
+    }
+    #game-container {
+      position: relative;
+      width: 1000px;
+      height: 800px;
+      background: url('img/dune-bg.jpg') no-repeat center/cover;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 0 20px #00000055;
+    }
+    #scarabee {
+      position: absolute;
+      bottom: 20px;
+      left: 460px;
+      width: 80px;
+      height: 80px;
+      background: url('img/scarabee.png') no-repeat center/contain;
+    }
+    .perle, .obstacle {
+      position: absolute;
+      top: -40px;
+      width: 40px;
+      height: 40px;
+    }
+    .perle[data-type="1"] { background: url('img/perle1.png') no-repeat center/contain; }
+    .perle[data-type="2"] { background: url('img/perle2.png') no-repeat center/contain; }
+    .perle[data-type="3"] { background: url('img/perle3.png') no-repeat center/contain; }
+
+    .obstacle[data-type="1"] { background: url('img/rocher1.png') no-repeat center/contain; }
+    .obstacle[data-type="2"] { background: url('img/rocher2.png') no-repeat center/contain; }
+
+    #scoreboard, #timer {
+      position: absolute;
+      top: 10px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      text-shadow: 1px 1px 3px #fff;
+    }
+    #scoreboard { left: 20px; }
+    #timer { right: 20px; }
+    #message {
+      position: absolute;
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: rgba(255,255,255,0.95);
+      color: #222;
+      padding: 20px;
+      border-radius: 15px;
+      font-size: 1rem;
+      box-shadow: 0 0 15px #00000033;
+      display: none;
+      max-width: 400px;
+      text-align: left;
+    }
+    #start-btn {
+      position: absolute;
+      top: 20%; left: 50%; transform: translateX(-50%);
+      padding: 15px 30px;
+      font-size: 1.4rem;
+      background: #d35400;
+      border: none;
+      color: white;
+      border-radius: 15px;
+      cursor: pointer;
+      z-index: 5;
+    }
+    #start-btn:hover { background: #e67e22; }
+    #back-btn {
+      margin-top: 30px;
+      background: #6e4d0d;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 20px;
+      font-size: 1.1rem;
+      cursor: pointer;
+    }
+    #back-btn:hover { background: #926f3d; }
+  </style>
+</head>
+<body>
+  <div id="wrapper">
+    <div id="game-container">
+      <div id="scoreboard">Score : 0</div>
+      <div id="timer">Temps : 30s</div>
+      <div id="scarabee"></div>
+      <div id="message"></div>
+      <button id="start-btn">Lancer la course !</button>
+    </div>
+    <button id="back-btn">&larr; Retour à la carte</button>
+  </div>
+
+  <script>
+    const scarabee = document.getElementById("scarabee");
+    const container = document.getElementById("game-container");
+    const scoreboard = document.getElementById("scoreboard");
+    const timerDisplay = document.getElementById("timer");
+    const message = document.getElementById("message");
+    const startBtn = document.getElementById("start-btn");
+
+    let score = 0;
+    let scarabeeX = 460;
+    let width = 1000, height = 800;
+    let gameInterval, spawnInterval, timerInterval;
+    let timer = 30;
+
+    const keys = { left: false, right: false };
+    const perlePoints = { 1: 1, 2: 3, 3: 5 };
+    const obstaclePoints = { 1: 2, 2: 4 };
+
+    function startGame() {
+      score = 0;
+      timer = 30;
+      scarabeeX = 460;
+      message.style.display = "none";
+      startBtn.style.display = "none";
+      container.querySelectorAll('.perle, .obstacle').forEach(e => e.remove());
+      updateScore();
+      updateTimer();
+      gameInterval = setInterval(updateGame, 20);
+      spawnInterval = setInterval(spawnElement, 700);
+      timerInterval = setInterval(() => {
+        timer--;
+        updateTimer();
+        if (timer <= 0) endGame();
+      }, 1000);
+    }
+
+    function spawnElement() {
+      const el = document.createElement("div");
+      const isPerle = Math.random() < 0.7;
+      const type = isPerle ? Math.ceil(Math.random()*3) : Math.ceil(Math.random()*2);
+      el.classList.add(isPerle ? "perle" : "obstacle");
+      el.dataset.type = type;
+      el.style.left = Math.random() * (width - 40) + "px";
+      el.style.top = "-40px";
+      el.speed = 2 + Math.random()*3;
+      container.appendChild(el);
+    }
+
+    function updateGame() {
+      if (keys.left) scarabeeX = Math.max(0, scarabeeX - 8);
+      if (keys.right) scarabeeX = Math.min(width - 80, scarabeeX + 8);
+      scarabee.style.left = scarabeeX + "px";
+
+      container.querySelectorAll(".perle, .obstacle").forEach(el => {
+        let top = parseFloat(el.style.top);
+        top += el.speed;
+        el.style.top = top + "px";
+        if (top > height) el.remove();
+        else if (checkCollision(el)) {
+          const t = el.dataset.type;
+          if (el.classList.contains("perle")) score += perlePoints[t];
+          else score = Math.max(0, score - obstaclePoints[t]);
+          updateScore();
+          el.remove();
+        }
+      });
+    }
+
+    function checkCollision(el) {
+      const r1 = el.getBoundingClientRect();
+      const r2 = scarabee.getBoundingClientRect();
+      return !(r1.right < r2.left || r1.left > r2.right || r1.bottom < r2.top || r1.top > r2.bottom);
+    }
+
+    function updateScore() {
+      scoreboard.textContent = `Score : ${score}`;
+    }
+    function updateTimer() {
+      timerDisplay.textContent = `Temps : ${timer}s`;
+    }
+
+    function endGame() {
+      clearInterval(gameInterval);
+      clearInterval(spawnInterval);
+      clearInterval(timerInterval);
+      message.innerHTML = `<h3>⏳ Temps écoulé, Fin de la course !</h3><p>Ton score : <strong>${score}</strong></p><p>Tu as gagné un <strong>Scarabée doré</strong> ✨</p>`;
+      message.style.display = "block";
+      startBtn.style.display = "block";
+      saveProgress(score);
+    }
+
+    function saveProgress(score) {
+      let data = JSON.parse(localStorage.getItem("progressionForetEtoiles") || "{}");
+      data["dune_chantante"] = {
+        terminé: true,
+        score: score,
+        objet: "Scarabée doré"
+      };
+      localStorage.setItem("progressionForetEtoiles", JSON.stringify(data));
+    }
+
+    startBtn.addEventListener("click", startGame);
+    document.getElementById("back-btn").addEventListener("click", () => {
+      window.location.href = "carte.html";
+    });
+
+    window.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft") keys.left = true;
+      if (e.key === "ArrowRight") keys.right = true;
+    });
+    window.addEventListener("keyup", e => {
+      if (e.key === "ArrowLeft") keys.left = false;
+      if (e.key === "ArrowRight") keys.right = false;
+    });
+    window.addEventListener("mousemove", e => {
+      const rect = container.getBoundingClientRect();
+      let x = e.clientX - rect.left;
+      scarabeeX = Math.min(Math.max(0, x - 40), width - 80);
+      scarabee.style.left = scarabeeX + "px";
+    });
+  </script>
+</body>
+</html>
