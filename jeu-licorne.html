@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Jeu Licorne - Chasse aux étoiles filantes</title>
+  <style>
+    body {
+      margin: 0; padding: 0;
+      background: linear-gradient(to bottom, #2c3e50, #3498db);
+      font-family: 'Comic Sans MS', cursive;
+      color: white;
+      user-select: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #game-container {
+      position: relative;
+      width: 1000px;
+      height: 800px;
+      background: linear-gradient(to bottom, #1c1f4a, #3c72a0);
+      overflow: hidden;
+      border-radius: 20px;
+      box-shadow: 0 0 20px #000000aa;
+    }
+    #licorne {
+      position: absolute;
+      bottom: 20px;
+      left: 460px;
+      width: 80px;
+      height: 80px;
+      background: url('img/licorne.png') no-repeat center/contain;
+      pointer-events: none;
+    }
+    .etoile, .obstacle {
+      position: absolute;
+      top: -40px;
+      width: 40px;
+      height: 40px;
+      pointer-events: none;
+    }
+    .etoile[data-type="type1"] { background: url('img/etoile1.png') no-repeat center/contain; }
+    .etoile[data-type="type2"] { background: url('img/etoile2.png') no-repeat center/contain; }
+    .etoile[data-type="type3"] { background: url('img/etoile3.png') no-repeat center/contain; }
+
+    .obstacle[data-type="type1"] { background: url('img/obstacle1.png') no-repeat center/contain; }
+    .obstacle[data-type="type2"] { background: url('img/obstacle2.png') no-repeat center/contain; }
+    .obstacle[data-type="type3"] { background: url('img/obstacle3.png') no-repeat center/contain; }
+
+    #scoreboard, #timer {
+      position: absolute;
+      top: 10px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      text-shadow: 1px 1px 3px #000;
+    }
+    #scoreboard { left: 20px; }
+    #timer { right: 20px; }
+    #message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #ffe;
+      text-shadow: 2px 2px 4px #000;
+      display: none;
+      text-align: center;
+      white-space: pre-line;
+    }
+    #start-btn {
+      position: absolute;
+      top: 20%;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 15px 30px;
+      font-size: 1.4rem;
+      border: none;
+      border-radius: 15px;
+      background: #ff6f61;
+      color: white;
+      cursor: pointer;
+    }
+    #start-btn:hover {
+      background: #ff3b2e;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <div id="scoreboard">⭐ Score : 0</div>
+    <div id="timer">⏱ Temps: 30 s</div>
+    <div id="licorne"></div>
+    <div id="message"></div>
+    <button id="start-btn">Commencer la chasse !</button>
+  </div>
+
+<script>
+  const licorne = document.getElementById("licorne");
+  const gameContainer = document.getElementById("game-container");
+  const scoreBoard = document.getElementById("scoreboard");
+  const timerDisplay = document.getElementById("timer");
+  const message = document.getElementById("message");
+  const startBtn = document.getElementById("start-btn");
+
+  let width = 1000, height = 800;
+  let licorneX = 460;
+
+  let score = 0;
+  let timer = 30;
+  let gameInterval, spawnInterval, timerInterval;
+
+  let keys = { left: false, right: false };
+
+  const etoilePoints = { type1: 1, type2: 3, type3: 5 };
+  const obstaclePoints = { type1: 2, type2: 4, type3: 6 };
+
+  let starTypes = { type1: 0, type2: 0, type3: 0 };
+  let obstacleTypes = { type1: 0, type2: 0, type3: 0 };
+
+  function createFallingElement(type) {
+    const el = document.createElement("div");
+    el.classList.add(type);
+    const t = "type" + (Math.floor(Math.random() * 3) + 1);
+    el.dataset.type = t;
+    el.style.left = Math.random() * (width - 40) + "px";
+    el.speed = 2 + Math.random() * 3;
+    gameContainer.appendChild(el);
+    return el;
+  }
+
+  function startGame() {
+    score = 0;
+    timer = 30;
+    licorneX = 460;
+    updateScore();
+    updateTimer();
+    message.style.display = "none";
+    startBtn.style.display = "none";
+
+    starTypes = { type1: 0, type2: 0, type3: 0 };
+    obstacleTypes = { type1: 0, type2: 0, type3: 0 };
+
+    document.querySelectorAll('.etoile, .obstacle').forEach(e => e.remove());
+
+    gameInterval = setInterval(updateGame, 20);
+    timerInterval = setInterval(() => {
+      timer--;
+      updateTimer();
+      if (timer <= 0) endGame();
+    }, 1000);
+    spawnInterval = setInterval(() => {
+      if (Math.random() < 0.7) createFallingElement("etoile");
+      else createFallingElement("obstacle");
+    }, 700);
+  }
+
+  function updateGame() {
+    moveLicorne();
+
+    document.querySelectorAll(".etoile").forEach(star => {
+      let top = parseFloat(star.style.top || -40);
+      top += star.speed;
+      star.style.top = top + "px";
+
+      if (top > height) star.remove();
+      else if (checkCollision(star)) {
+        let pts = etoilePoints[star.dataset.type] || 1;
+        score += pts;
+        starTypes[star.dataset.type]++;
+        updateScore();
+        star.remove();
+      }
+    });
+
+    document.querySelectorAll(".obstacle").forEach(obs => {
+      let top = parseFloat(obs.style.top || -40);
+      top += obs.speed;
+      obs.style.top = top + "px";
+
+      if (top > height) obs.remove();
+      else if (checkCollision(obs)) {
+        let pts = obstaclePoints[obs.dataset.type] || 2;
+        score = Math.max(0, score - pts);
+        obstacleTypes[obs.dataset.type]++;
+        updateScore();
+        obs.remove();
+      }
+    });
+  }
+
+  function moveLicorne() {
+    if (keys.left) licorneX = Math.max(0, licorneX - 8);
+    if (keys.right) licorneX = Math.min(width - 80, licorneX + 8);
+    licorne.style.left = licorneX + "px";
+  }
+
+  function checkCollision(el) {
+    const r1 = el.getBoundingClientRect();
+    const r2 = licorne.getBoundingClientRect();
+    return !(
+      r1.right < r2.left ||
+      r1.left > r2.right ||
+      r1.bottom < r2.top ||
+      r1.top > r2.bottom
+    );
+  }
+
+  function updateScore() {
+    scoreBoard.textContent = `⭐ Score : ${score}`;
+  }
+
+  function updateTimer() {
+    timerDisplay.textContent = `⏱ Temps: ${timer} s`;
+  }
+
+  function endGame() {
+    clearInterval(gameInterval);
+    clearInterval(spawnInterval);
+    clearInterval(timerInterval);
+
+    let details = `⭐ Score final : ${score}\n\n✨ Étoiles attrapées :\n`;
+    for (let type in starTypes) {
+      if (starTypes[type] > 0)
+        details += `• ${type} : ${starTypes[type]} × ${etoilePoints[type]} pts = ${starTypes[type]*etoilePoints[type]} pts\n`;
+    }
+    details += `\n💥 Obstacles touchés :\n`;
+    for (let type in obstacleTypes) {
+      if (obstacleTypes[type] > 0)
+        details += `• ${type} : ${obstacleTypes[type]} × -${obstaclePoints[type]} pts = -${obstacleTypes[type]*obstaclePoints[type]} pts\n`;
+    }
+
+    message.textContent = `⏳ Temps écoulé !\n\n${details}`;
+    message.style.display = "block";
+    startBtn.style.display = "block";
+
+    saveProgress(score);
+  }
+
+  function saveProgress(score) {
+    let progress = JSON.parse(localStorage.getItem("progressionForetEtoiles") || "{}");
+    progress["ile_licornes"] = {
+      terminé: true,
+      score: score,
+      objet: "Corne scintillante"
+    };
+    localStorage.setItem("progressionForetEtoiles", JSON.stringify(progress));
+  }
+
+  // Contrôles
+  window.addEventListener("keydown", e => {
+    if (e.key === "ArrowLeft") keys.left = true;
+    if (e.key === "ArrowRight") keys.right = true;
+  });
+  window.addEventListener("keyup", e => {
+    if (e.key === "ArrowLeft") keys.left = false;
+    if (e.key === "ArrowRight") keys.right = false;
+  });
+  window.addEventListener("mousemove", e => {
+    const rect = gameContainer.getBoundingClientRect();
+    let x = e.clientX - rect.left;
+    licorneX = Math.min(Math.max(0, x - 40), width - 80);
+    licorne.style.left = licorneX + "px";
+  });
+
+  startBtn.addEventListener("click", startGame);
+</script>
+</body>
+</html>
