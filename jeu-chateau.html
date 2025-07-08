@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>🏰 Château volant – Calculs magiques</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: 'Comic Sans MS', cursive;
+      background: linear-gradient(to bottom, #cde2ff, #f7e7ff);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+      min-height: 100vh;
+      text-align: center;
+      color: #3b1a57;
+      padding: 20px;
+    }
+
+    h1 {
+      margin: 20px 0;
+    }
+
+    .question {
+      margin: 20px 0;
+      background: #fff;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 10px #aaa;
+      max-width: 500px;
+      width: 90%;
+    }
+
+    .question p {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+    }
+
+    input[type="number"] {
+      padding: 8px 12px;
+      font-size: 1.1rem;
+      border-radius: 10px;
+      border: 2px solid #f2a365;
+      width: 100px;
+      text-align: center;
+    }
+
+    button {
+      background: #3b1a57;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 20px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      margin: 10px;
+    }
+
+    button:hover {
+      background: #4a2677;
+    }
+
+    #result {
+      font-size: 1.3rem;
+      margin: 20px;
+    }
+
+    .btn-container {
+      display: flex;
+      gap: 20px;
+      margin-top: 30px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>🏰 Château volant – Calculs magiques</h1>
+
+  <form id="quiz-form"></form>
+
+  <div id="result"></div>
+
+  <div class="btn-container">
+    <button id="retry-btn">🔄 Rejouer</button>
+    <button onclick="window.location.href='carte.html'">← Retour à la carte</button>
+  </div>
+
+  <!-- Sons -->
+  <audio id="sound-win" src="sounds/win.mp3"></audio>
+  <audio id="sound-fail" src="sounds/fail.mp3"></audio>
+
+  <script>
+    const allQuestions = [
+      { text: "🐉 Un dragon a 3 têtes. Chaque tête crache 4 flammes. Combien de flammes ?", answer: 12 },
+      { text: "🧙‍♂️ Le mage possède 2 grimoires. Chaque grimoire contient 25 sorts. Combien de sorts ?", answer: 50 },
+      { text: "🕯️ Tu allumes 5 chandelles et souffles-en 2. Combien restent allumées ?", answer: 3 },
+      { text: "🦄 Une licorne a 4 sabots. Combien ont 3 licornes ?", answer: 12 },
+      { text: "🧚‍♀️ Une fée donne 7 étoiles par jour. En 5 jours ?", answer: 35 },
+      { text: "🐸 6 grenouilles. Chacune a 4 pattes. Total de pattes ?", answer: 24 },
+      { text: "🧵 Une araignée tisse 2 toiles/jour. En 7 jours ?", answer: 14 },
+      { text: "👑 4 princesses avec 3 bagues chacune. Total ?", answer: 12 },
+      { text: "🦉 3 hiboux. 1 s’envole. Combien en reste-t-il ?", answer: 2 },
+      { text: "🍄 5 lutins trouvent 2 champignons chacun. Total ?", answer: 10 },
+      { text: "🐺 4 loups. Chacun mange 3 gâteaux. Combien au total ?", answer: 12 },
+      { text: "🔮 6 boules de cristal. Chacune éclaire 5 minutes. Total de minutes ?", answer: 30 },
+      { text: "🦅 2 aigles ont 7 plumes dorées chacun. Combien de plumes ?", answer: 14 },
+      { text: "🧛 Un vampire dort 9h/jour. Combien en 3 jours ?", answer: 27 },
+      { text: "🧟 4 zombies font 2 pas par minute. Combien de pas en 1 minute ?", answer: 8 },
+      { text: "🐺 Un loup crie 3 fois par nuit. Combien en 4 nuits ?", answer: 12 },
+      { text: "🧝‍♂️ 5 elfes tirent 2 flèches chacun. Total de flèches ?", answer: 10 },
+      { text: "⚗️ Une potion demande 3 gouttes rouges et 2 bleues. Combien de gouttes au total ?", answer: 5 },
+      { text: "👻 7 fantômes volent 3 fois chacun. Total de vols ?", answer: 21 },
+      { text: "🕸️ 8 araignées font 2 toiles chacune. Total ?", answer: 16 },
+      { text: "🦢 5 cygnes pondent 1 œuf chacun. Total ?", answer: 5 },
+      { text: "🏹 6 archers décochent 4 flèches chacun. Total ?", answer: 24 },
+      { text: "🦴 3 squelettes perdent 6 os chacun. Combien d’os ?", answer: 18 },
+      { text: "🌕 1 nuit magique dure 10 heures. Combien 2 nuits ?", answer: 20 },
+      { text: "🐠 4 poissons magiques ont 3 écailles brillantes chacun. Total ?", answer: 12 },
+      { text: "🐦 3 oiseaux chantent 2 chansons chacun. Total ?", answer: 6 },
+      { text: "🎩 2 magiciens ont 4 chapeaux chacun. Combien de chapeaux ?", answer: 8 },
+      { text: "🧞‍♂️ 1 génie exauce 3 vœux. 2 génies ?", answer: 6 },
+      { text: "🌈 Il faut 7 couleurs pour un arc-en-ciel. Combien pour 2 ?", answer: 14 },
+      { text: "👠 3 fées laissent 1 chaussure chacune. Total ?", answer: 3 }
+    ];
+
+    const quizForm = document.getElementById('quiz-form');
+    const resultDiv = document.getElementById('result');
+    const retryBtn = document.getElementById('retry-btn');
+    const soundGood = document.getElementById('sound-good');
+    const soundBad = document.getElementById('sound-bad');
+    let selectedQuestions = [];
+
+    function getRandomQuestions(count) {
+      const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, count);
+    }
+
+    function displayQuestions() {
+      quizForm.innerHTML = '';
+      resultDiv.textContent = '';
+      selectedQuestions = getRandomQuestions(5);
+
+      selectedQuestions.forEach((q, index) => {
+        const div = document.createElement("div");
+        div.className = "question";
+        div.innerHTML = `
+          <p>${q.text}</p>
+          <input type="number" name="q${index}" required />
+        `;
+        quizForm.appendChild(div);
+      });
+
+      const submitBtn = document.createElement("button");
+      submitBtn.type = "submit";
+      submitBtn.textContent = "✨ Valider mes réponses";
+      quizForm.appendChild(submitBtn);
+    }
+
+	quizForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      let score = 0;
+
+      selectedQuestions.forEach((q, index) => {
+        const input = quizForm.elements["q" + index];
+        const value = parseInt(input.value);
+        if (value === q.answer) {
+          score += 20;
+        }
+        input.disabled = true;
+      });
+
+      resultDiv.textContent = `🎉 Bravo ! Ton score magique est : ${score}/100`;
+      saveProgress(score);
+      quizForm.querySelector("button[type='submit']").disabled = true;
+
+      // 🎵 Joue le bon son final
+      if (score === 100) {
+        document.getElementById('sound-win').play();
+      } else {
+        document.getElementById('sound-fail').play();
+      }
+    });
+
+    function saveProgress(score) {
+      const progress = JSON.parse(localStorage.getItem("progressionForetEtoiles") || "{}");
+      progress["chateau_volant"] = {
+        terminé: true,
+        score: score,
+        objet: "Grimoire étincelant"
+      };
+      localStorage.setItem("progressionForetEtoiles", JSON.stringify(progress));
+    }
+
+    retryBtn.addEventListener("click", () => {
+      displayQuestions();
+    });
+
+    displayQuestions();
+  </script>
+</body>
+</html>

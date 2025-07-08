@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Chemin des couleurs - Montagne arc-en-ciel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: 'Comic Sans MS', cursive;
+      background: linear-gradient(to bottom, #e0f7fa, #fceabb);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      color: #3b1a57;
+    }
+    #message {
+      font-size: 1.2rem;
+      margin: 15px;
+      color: #3b1a57;
+      text-align: center;
+    }
+    #difficulty {
+      margin: 10px 0;
+      font-size: 1rem;
+    }
+    #color-buttons {
+      display: flex;
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .color-btn {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 3px solid #3b1a57;
+      cursor: pointer;
+      opacity: 0.7;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .color-btn.active {
+      opacity: 1;
+      transform: scale(1.2);
+    }
+    .red { background: red; }
+    .green { background: green; }
+    .blue { background: blue; }
+    .yellow { background: gold; }
+    .purple { background: purple; }
+    .orange { background: orange; }
+    #submit-btn, #reset-btn, #back-btn {
+      background: #3b1a57;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 15px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin: 10px;
+    }
+    #submit-btn:hover, #reset-btn:hover, #back-btn:hover {
+      background: #4a2677;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌈 Montagne arc-en-ciel - Chemin des couleurs</h1>
+  <div id="message">Choisis un niveau et observe la séquence !</div>
+
+  <label for="difficulty">Difficulté : </label>
+  <select id="difficulty">
+    <option value="3">Facile (3 couleurs)</option>
+    <option value="4">Moyen (4 couleurs)</option>
+    <option value="5">Difficile (5 couleurs)</option>
+    <option value="6">Très difficile (6 couleurs)</option>
+  </select>
+  <button onclick="startGame()">Démarrer</button>
+
+  <div id="color-buttons">
+    <div class="color-btn red" data-color="red"></div>
+    <div class="color-btn green" data-color="green"></div>
+    <div class="color-btn blue" data-color="blue"></div>
+    <div class="color-btn yellow" data-color="yellow"></div>
+    <div class="color-btn purple" data-color="purple"></div>
+    <div class="color-btn orange" data-color="orange"></div>
+  </div>
+
+  <button id="submit-btn">✨ Valider ma réponse</button>
+  <button id="reset-btn">🔄 Rejouer</button>
+  <button id="back-btn" onclick="window.location.href='carte.html'">← Retour à la carte</button>
+
+  <audio id="sound-win" src="sounds/win.mp3"></audio>
+  <audio id="sound-fail" src="sounds/fail.mp3"></audio>
+
+  <script>
+    const allColors = ["red", "green", "blue", "yellow", "purple", "orange"];
+    let sequence = [];
+    let playerInput = [];
+    let playing = false;
+    let currentDifficulty = 3;
+
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+    }
+
+    function startGame() {
+      currentDifficulty = parseInt(document.getElementById("difficulty").value);
+      sequence = [];
+      playerInput = [];
+      for (let i = 0; i < currentDifficulty; i++) {
+        sequence.push(allColors[Math.floor(Math.random() * allColors.length)]);
+      }
+      document.getElementById("message").textContent = "Regarde bien la séquence...";
+      showSequence();
+    }
+
+    function showSequence() {
+      let index = 0;
+      playing = true;
+      const buttons = document.querySelectorAll(".color-btn");
+      const interval = setInterval(() => {
+        buttons.forEach(btn => btn.classList.remove("active"));
+        if (index >= sequence.length) {
+          clearInterval(interval);
+          setTimeout(() => {
+            buttons.forEach(btn => btn.classList.remove("active"));
+            document.getElementById("message").textContent = "Reproduis la séquence en cliquant sur les couleurs !";
+            playing = false;
+          }, 500);
+          return;
+        }
+        const color = sequence[index];
+        const btn = document.querySelector(`.color-btn.${color}`);
+        btn.classList.add("active");
+        index++;
+      }, 1000);
+    }
+
+    document.querySelectorAll(".color-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (playing) return;
+        const color = btn.dataset.color;
+        playerInput.push(color);
+      });
+    });
+
+    document.getElementById("submit-btn").addEventListener("click", () => {
+      if (sequence.length === 0 || playerInput.length === 0) return;
+      let correct = sequence.length === playerInput.length && sequence.every((c, i) => c === playerInput[i]);
+      let bonus = 0;
+      if (currentDifficulty === 4) bonus = 5;
+      else if (currentDifficulty === 5) bonus = 10;
+      else if (currentDifficulty === 6) bonus = 15;
+
+      if (correct) {
+        document.getElementById("message").textContent = "🌟 Bravo ! Tu as traversé la montagne !";
+        document.getElementById("sound-win").play();
+        saveProgress(100 + bonus);
+      } else {
+        document.getElementById("message").textContent = "❌ Oups ! Ce n'était pas la bonne séquence.";
+        document.getElementById("sound-fail").play();
+        saveProgress(60 + bonus);
+      }
+    });
+
+    function saveProgress(score) {
+      let progress = JSON.parse(localStorage.getItem("progressionForetEtoiles") || "{}");
+      progress["montagne_arc"] = {
+        terminé: true,
+        score: score,
+        objet: "Cristal arc-en-ciel"
+      };
+      localStorage.setItem("progressionForetEtoiles", JSON.stringify(progress));
+    }
+
+    document.getElementById("reset-btn").addEventListener("click", startGame);
+  </script>
+</body>
+</html>

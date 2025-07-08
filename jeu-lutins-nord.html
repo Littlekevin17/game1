@@ -1,0 +1,202 @@
+<!-- Jeu 3 : Village des Lutins - Mission Ingrédients -->
+<!-- Fichier : jeu-lutins-nord.html -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Mission Ingrédients - Village des Lutins</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: 'Comic Sans MS', cursive;
+      background: linear-gradient(to bottom, #fdf6e3, #d0e6a5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+      min-height: 100vh;
+    }
+
+    h1 {
+      margin: 20px;
+      color: #3b1a57;
+    }
+
+    #message {
+      font-size: 1.2rem;
+      margin: 10px;
+      color: #3b1a57;
+      text-align: center;
+    }
+
+    #game-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      max-width: 600px;
+      padding: 20px;
+      background: #ffffffcc;
+      border: 2px solid #f2a365;
+      border-radius: 20px;
+    }
+
+    .ingredient {
+      font-size: 1.2rem;
+      background: #fceabb;
+      border: 2px solid #f2a365;
+      border-radius: 10px;
+      padding: 10px 20px;
+      margin: 5px;
+    }
+
+    select {
+      font-size: 1rem;
+      padding: 5px;
+      margin: 5px;
+    }
+
+    #submit-btn, #reset-btn, #back-btn {
+      background: #3b1a57;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 15px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin: 10px;
+    }
+
+    #submit-btn:hover, #reset-btn:hover, #back-btn:hover {
+      background: #4a2677;
+    }
+  </style>
+</head>
+<body>
+  <h1>🏡 Village des Lutins – Mission Ingrédients</h1>
+  <div id="message">Lis les indices et place les ingrédients dans le bon ordre !</div>
+
+  <div id="game-container"></div>
+
+  <button id="submit-btn">✨ Valider mes réponses</button>
+  <button id="reset-btn">🔄 Rejouer</button>
+  <button id="back-btn" onclick="window.location.href='carte.html'">← Retour à la carte</button>
+
+  <audio id="sound-win" src="sounds/win.mp3"></audio>
+  <audio id="sound-fail" src="sounds/fail.mp3"></audio>
+
+  <script>
+    const ingredientsList = [
+      "Champignon rouge",
+      "Sucre de licorne",
+      "Poudre dorée",
+      "Feuille chantante",
+      "Goutte de rosée",
+      "Baie brillante",
+      "Plume d’elfe",
+      "Larme d’arc-en-ciel"
+    ];
+
+    let currentIngredients = [];
+    let correctOrder = [];
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function generateClues(order) {
+      const clues = [];
+      const usedPairs = new Set();
+      while (clues.length < 3) {
+        let i = Math.floor(Math.random() * (order.length - 1));
+        let j = i + 1;
+        const a = order[i];
+        const b = order[j];
+        const key = `${a}|${b}`;
+        if (!usedPairs.has(key)) {
+          clues.push(`L’ingrédient "${a}" vient avant "${b}".`);
+          usedPairs.add(key);
+        }
+      }
+      return clues;
+    }
+
+    function initGame() {
+      const container = document.getElementById("game-container");
+      container.innerHTML = "";
+      document.getElementById("message").textContent = "Lis les indices et place les ingrédients dans le bon ordre !";
+
+      currentIngredients = [...ingredientsList];
+      shuffle(currentIngredients);
+      currentIngredients = currentIngredients.slice(0, 4);
+      correctOrder = [...currentIngredients];
+      shuffle(correctOrder);
+
+      const clues = generateClues(correctOrder);
+
+      const cluesDiv = document.createElement("div");
+      clues.forEach(c => {
+        const clue = document.createElement("p");
+        clue.textContent = `⚡️ ${c}`;
+        cluesDiv.appendChild(clue);
+      });
+      container.appendChild(cluesDiv);
+
+      currentIngredients.forEach((ingredient, i) => {
+        const div = document.createElement("div");
+        div.className = "ingredient";
+        const label = document.createElement("label");
+        label.textContent = ingredient;
+        const select = document.createElement("select");
+        for (let i = 1; i <= 4; i++) {
+          const opt = document.createElement("option");
+          opt.value = i;
+          opt.textContent = `${i}e position`;
+          select.appendChild(opt);
+        }
+        div.appendChild(label);
+        div.appendChild(select);
+        container.appendChild(div);
+      });
+    }
+
+    document.getElementById("submit-btn").addEventListener("click", () => {
+      const selects = document.querySelectorAll("select");
+      const answers = Array.from(selects).map(s => parseInt(s.value));
+      let correct = true;
+
+      for (let i = 0; i < currentIngredients.length; i++) {
+        const expectedPos = correctOrder.indexOf(currentIngredients[i]) + 1;
+        if (answers[i] !== expectedPos) correct = false;
+      }
+
+      if (correct) {
+        document.getElementById("message").textContent = "🌟 Bravo ! Tu as réussi la mission des lutins !";
+        document.getElementById("sound-win").play();
+        saveProgress(100);
+      } else {
+        document.getElementById("message").textContent = "❌ Oups ! Ce n'est pas la bonne combinaison.";
+        document.getElementById("sound-fail").play();
+        saveProgress(60);
+      }
+    });
+
+    function saveProgress(score) {
+      let progress = JSON.parse(localStorage.getItem("progressionForetEtoiles") || "{}");
+      progress["village_nord"] = {
+        terminé: true,
+        score: score,
+        objet: "Graine de sagesse"
+      };
+      localStorage.setItem("progressionForetEtoiles", JSON.stringify(progress));
+    }
+
+    document.getElementById("reset-btn").addEventListener("click", initGame);
+
+    initGame();
+  </script>
+</body>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Lac aux fées - Potion magique</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: 'Comic Sans MS', cursive;
+      background: linear-gradient(to bottom, #c5f0e5, #f0e5f7);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      color: #3b1a57;
+      text-align: center;
+    }
+    #message {
+      font-size: 1.2rem;
+      margin: 15px;
+      color: #3b1a57;
+      text-align: center;
+    }
+    #final-score {
+      font-size: 1.4rem;
+      color: #4caf50;
+      font-weight: bold;
+      margin-top: 10px;
+      text-align: center;
+    }
+    #difficulty {
+      margin-bottom: 20px;
+    }
+    .symbols {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .symbol {
+      font-size: 2rem;
+      cursor: pointer;
+      padding: 10px;
+      border: 2px solid #3b1a57;
+      border-radius: 12px;
+      background: #fff8f8;
+      user-select: none;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .symbol:hover {
+      background: #f2a365;
+      color: white;
+    }
+    #guess-display {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-size: 2rem;
+      min-height: 3rem;
+      justify-content: center;
+    }
+    button {
+      background: #3b1a57;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 15px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin: 10px;
+      min-width: 150px;
+    }
+    button:hover:not(:disabled) {
+      background: #4a2677;
+    }
+    button:disabled {
+      background: #999;
+      cursor: default;
+    }
+    .attempts {
+      margin-top: 15px;
+      text-align: center;
+      font-size: 1rem;
+      color: #3b1a57;
+      min-height: 4rem;
+      white-space: pre-line;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌿 Lac aux fées - Potion magique</h1>
+  <div id="message">Trouve la bonne combinaison d'ingrédients magiques !</div>
+  <div id="final-score"></div>
+
+  <label for="difficulty">Difficulté : </label>
+  <select id="difficulty">
+    <option value="3">Facile (3 symboles)</option>
+    <option value="4">Moyen (4 symboles)</option>
+    <option value="5">Difficile (5 symboles)</option>
+    <option value="6">Très difficile (6 symboles)</option>
+  </select>
+  <button id="start-btn" onclick="startGame()">Commencer</button>
+
+  <div class="symbols" id="symbol-list"></div>
+  <div id="guess-display"></div>
+  <button id="submit-btn" onclick="submitGuess()">✨ Valider ma tentative</button>
+  <div class="attempts" id="attempts"></div>
+  <button id="replay-btn" onclick="startGame()">🔄 Rejouer</button>
+  <button onclick="window.location.href='carte.html'">← Retour à la carte</button>
+
+  <audio id="sound-win" src="sounds/win.mp3"></audio>
+  <audio id="sound-fail" src="sounds/fail.mp3"></audio>
+
+<script>
+  const allSymbols = ['🧨', '🌿', '🌟', '🧙‍♀️', '🌈', '🪄', '🍒', '🍀'];
+  let solution = [];
+  let currentGuess = [];
+  let maxSymbols = 3;
+  let attempts = [];
+  let usedSymbols = [];
+  const maxAttempts = 15;
+
+  const startBtn = document.getElementById("start-btn");
+  const submitBtn = document.getElementById("submit-btn");
+  const replayBtn = document.getElementById("replay-btn");
+  const messageEl = document.getElementById("message");
+  const attemptsEl = document.getElementById("attempts");
+  const guessDisplay = document.getElementById("guess-display");
+  const finalScoreEl = document.getElementById("final-score");
+  const soundWin = document.getElementById("sound-win");
+  const soundFail = document.getElementById("sound-fail");
+
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+  }
+
+  function startGame() {
+    maxSymbols = parseInt(document.getElementById("difficulty").value);
+    solution = [];
+    currentGuess = [];
+    attempts = [];
+    guessDisplay.innerHTML = '';
+    attemptsEl.textContent = `Tentative 0 sur ${maxAttempts}`;
+    messageEl.textContent = "Trouve la bonne combinaison d'ingrédients magiques !";
+    finalScoreEl.textContent = '';
+
+    enableInput(true);
+
+    shuffle(allSymbols);
+    usedSymbols = allSymbols.slice(0, Math.max(6, maxSymbols));
+    shuffle(usedSymbols);
+
+    // Solution choisie aléatoirement parmi usedSymbols, indépendamment de l'ordre d'affichage
+    let temp = [...usedSymbols];
+    shuffle(temp);
+    solution = temp.slice(0, maxSymbols);
+
+    const list = document.getElementById("symbol-list");
+    list.innerHTML = '';
+    usedSymbols.forEach(symbol => {
+      const span = document.createElement('span');
+      span.className = 'symbol';
+      span.textContent = symbol;
+      span.onclick = () => addToGuess(symbol);
+      list.appendChild(span);
+    });
+  }
+
+  function addToGuess(symbol) {
+    if (currentGuess.length >= maxSymbols) return;
+    currentGuess.push(symbol);
+    updateGuessDisplay();
+  }
+
+	function updateGuessDisplay() {
+	  guessDisplay.innerHTML = '';
+	  currentGuess.forEach((symbol, index) => {
+		const span = document.createElement('span');
+		span.textContent = symbol;
+		span.style.cursor = 'pointer';
+		span.title = 'Cliquer pour retirer';
+		span.onclick = () => {
+		  currentGuess.splice(index, 1);
+		  updateGuessDisplay();
+		};
+		guessDisplay.appendChild(span);
+	  });
+}
+
+  function submitGuess() {
+    if (currentGuess.length !== maxSymbols) {
+      alert("Veuillez sélectionner tous les symboles avant de valider !");
+      return;
+    }
+
+    let correctPlace = 0;
+    let wrongPlace = 0;
+
+    const solCopy = [...solution];
+    const guessCopy = [...currentGuess];
+
+    for (let i = 0; i < maxSymbols; i++) {
+      if (guessCopy[i] === solCopy[i]) {
+        correctPlace++;
+        solCopy[i] = guessCopy[i] = null;
+      }
+    }
+
+    for (let i = 0; i < maxSymbols; i++) {
+      if (guessCopy[i] && solCopy.includes(guessCopy[i])) {
+        wrongPlace++;
+        solCopy[solCopy.indexOf(guessCopy[i])] = null;
+      }
+    }
+
+    attempts.push({ guess: [...currentGuess], correctPlace, wrongPlace });
+
+    displayAttempts();
+
+    if (correctPlace === maxSymbols) {
+      const score = 100 + getBonus();
+      messageEl.textContent = "🌟 Bravo ! Tu as réussi la potion magique !";
+      finalScoreEl.textContent = `Score : ${score} points`;
+      soundWin.play();
+      enableInput(false);
+      saveProgress(score);
+    } else if (attempts.length >= maxAttempts) {
+      const score = 0 + getBonus();
+      messageEl.textContent = "❌ Oups ! Tu n'as pas trouvé la bonne combinaison.";
+      finalScoreEl.textContent = `Score : ${score} points`;
+      soundFail.play();
+      enableInput(false);
+      saveProgress(score);
+    }
+
+    currentGuess = [];
+    updateGuessDisplay();
+  }
+
+  function displayAttempts() {
+    attemptsEl.innerHTML = attempts.map((a, i) =>
+      `Tentative ${i + 1} : ${a.guess.join(' ')} → ✅ ${a.correctPlace} bien placé(s), ⏳ ${a.wrongPlace} mal placé(s)`
+    ).join('<br>');
+
+    attemptsEl.innerHTML += `<br><br><b>Tentative ${attempts.length} sur ${maxAttempts}</b>`;
+  }
+
+  function getBonus() {
+    if (maxSymbols === 4) return 5;
+    if (maxSymbols === 5) return 10;
+    if (maxSymbols === 6) return 15;
+    return 0;
+  }
+
+  function enableInput(enabled) {
+    submitBtn.disabled = !enabled;
+    const symbols = document.querySelectorAll('.symbol');
+    symbols.forEach(sym => {
+      sym.style.pointerEvents = enabled ? 'auto' : 'none';
+      sym.style.opacity = enabled ? '1' : '0.5';
+    });
+  }
+
+  function saveProgress(score) {
+    let progress = JSON.parse(localStorage.getItem("progressionForetEtoiles") || "{}");
+    progress["lac_fee"] = {
+      terminé: true,
+      score: score,
+      objet: "Pâtée de fée magique"
+    };
+    localStorage.setItem("progressionForetEtoiles", JSON.stringify(progress));
+  }
+
+  startGame();
+</script>
+</body>
+</html>
+

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Le Monde Enchanté - Accueil</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap');
+
+  body {
+    font-family: 'Indie Flower', cursive, 'Comic Sans MS', cursive, sans-serif;
+    background: linear-gradient(to bottom, #a2d5f2, #fceabb);
+    margin: 0; padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+    justify-content: center;
+    color: #3b1a57;
+    user-select: none;
+  }
+  h1 {
+    font-size: 3rem;
+    text-shadow: 2px 2px 6px #f2a365;
+    margin-bottom: 20px;
+  }
+  .container {
+    background: #fff0f6cc;
+    border: 3px solid #f2a365;
+    border-radius: 25px;
+    padding: 40px 35px;
+    max-width: 400px;
+    width: 95vw;
+    box-shadow: 0 0 25px #f2a365aa;
+    text-align: center;
+  }
+  label {
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    display: block;
+  }
+  .characters {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin: 20px 0 30px;
+  }
+  .character {
+    cursor: pointer;
+    border: 3px solid transparent;
+    border-radius: 50%;
+    padding: 10px;
+    width: 120px;
+    height: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #fceabb;
+    box-shadow: 0 0 12px #f2a365aa;
+    transition: border-color 0.3s, transform 0.3s;
+    font-size: 4rem;
+    user-select: none;
+  }
+  .character.selected {
+    border-color: #f2a365;
+    transform: scale(1.1);
+    box-shadow: 0 0 20px #f2a365ff;
+  }
+  .character span {
+    margin-top: 10px;
+    font-size: 1.3rem;
+    color: #3b1a57;
+  }
+  input[type="text"] {
+    font-size: 1.3rem;
+    padding: 12px;
+    width: 90%;
+    border-radius: 15px;
+    border: 2px solid #f2a365;
+    outline: none;
+    margin-bottom: 25px;
+    text-align: center;
+  }
+  input[type="text"]::placeholder {
+    color: #b4997e;
+  }
+  button#start-btn {
+    font-size: 1.6rem;
+    padding: 15px 40px;
+    border-radius: 30px;
+    background: #3b1a57;
+    color: white;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 8px #2e1443;
+    transition: background 0.3s;
+  }
+  button#start-btn:disabled {
+    background: #999;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  button#start-btn:hover:not(:disabled) {
+    background: #4a2677;
+  }
+  .music-control {
+    margin-top: 30px;
+    font-size: 1.4rem;
+    color: #3b1a57;
+    cursor: pointer;
+    user-select: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: color 0.3s;
+  }
+  .music-control:hover {
+    color: #f2a365;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Le Monde Enchanté</h1>
+    
+    <label>Choisis ton personnage :</label>
+    <div class="characters">
+      <div class="character" id="char-girl" tabindex="0" role="button" aria-label="Choisir personnage fille">
+        👧
+        <span>Fille</span>
+      </div>
+      <div class="character" id="char-boy" tabindex="0" role="button" aria-label="Choisir personnage garçon">
+        👦
+        <span>Garçon</span>
+      </div>
+    </div>
+    
+    <label for="input-name">Quel est ton prénom ?</label>
+    <input type="text" id="input-name" placeholder="Écris ton prénom ici" autocomplete="off" />
+
+    <button id="start-btn" disabled>Commencer l’aventure</button>
+    
+    <div class="music-control" id="music-control" role="button" tabindex="0" aria-pressed="false">
+      ▶️ Activer la musique
+    </div>
+  </div>
+
+  <audio id="background-music" loop src="sounds/game-music-loop.mp3"/></audio>
+
+<script>
+  const charGirl = document.getElementById('char-girl');
+  const charBoy = document.getElementById('char-boy');
+  const inputName = document.getElementById('input-name');
+  const startBtn = document.getElementById('start-btn');
+  const musicControl = document.getElementById('music-control');
+  const bgMusic = document.getElementById('background-music');
+
+  let selectedCharacter = null;
+  let musicPlaying = false;
+
+  function updateStartButton() {
+    startBtn.disabled = !(selectedCharacter && inputName.value.trim().length > 0);
+  }
+
+  function selectCharacter(char) {
+    selectedCharacter = char;
+    if (char === 'fille') {
+      charGirl.classList.add('selected');
+      charBoy.classList.remove('selected');
+    } else {
+      charBoy.classList.add('selected');
+      charGirl.classList.remove('selected');
+    }
+    updateStartButton();
+  }
+
+  charGirl.addEventListener('click', () => selectCharacter('fille'));
+  charBoy.addEventListener('click', () => selectCharacter('garçon'));
+
+  // Allow keyboard navigation
+  charGirl.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') { selectCharacter('fille'); e.preventDefault(); }});
+  charBoy.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') { selectCharacter('garçon'); e.preventDefault(); }});
+
+  inputName.addEventListener('input', updateStartButton);
+
+  startBtn.addEventListener('click', () => {
+   const name = encodeURIComponent(inputName.value.trim());
+   const character = encodeURIComponent(selectedCharacter);
+   window.location.href = `carte.html?name=${name}&character=${character}`;
+  });
+
+  musicControl.addEventListener('click', toggleMusic);
+  musicControl.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') { toggleMusic(); e.preventDefault(); }});
+
+  function toggleMusic() {
+    if (!musicPlaying) {
+      bgMusic.play();
+      musicPlaying = true;
+      musicControl.textContent = '🔇 Couper la musique';
+      musicControl.setAttribute('aria-pressed', 'true');
+    } else {
+      bgMusic.pause();
+      musicPlaying = false;
+      musicControl.textContent = '▶️ Activer la musique';
+      musicControl.setAttribute('aria-pressed', 'false');
+    }
+  }
+</script>
+</body>
+</html>

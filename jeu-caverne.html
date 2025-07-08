@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Caverne de glace - Alphabet enchanté</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: 'Comic Sans MS', cursive;
+      background: linear-gradient(to bottom, #dff2f9, #f0e5ff);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      margin: 0;
+    }
+
+    h1 { color: #3b1a57; }
+    #timer { font-size: 1.2rem; color: #4caf50; margin: 10px; }
+    #shuffled-letters, #selected-letters {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      justify-content: center; margin: 15px 0;
+    }
+
+    .letter {
+      font-size: 2rem;
+      padding: 10px 15px;
+      border: 2px solid #3b1a57;
+      background: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .letter:hover {
+      background: #f2a365;
+      color: white;
+    }
+
+    button {
+      background: #3b1a57;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 15px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin: 10px;
+    }
+
+    button:hover { background: #4a2677; }
+    #message {
+      font-size: 1.2rem;
+      color: #3b1a57;
+      margin: 15px;
+      text-align: center;
+    }
+
+    #score {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #4caf50;
+    }
+
+    select {
+      padding: 5px 10px;
+      font-size: 1rem;
+      margin: 10px;
+      border-radius: 8px;
+      border: 1px solid #aaa;
+    }
+  </style>
+</head>
+<body>
+  <h1>❄️ Caverne de glace - Alphabet enchanté</h1>
+
+  <label for="difficulty">Difficulté :</label>
+  <select id="difficulty">
+    <option value="3">Facile (3 lettres)</option>
+    <option value="4">Moyen (4 lettres)</option>
+    <option value="5" selected>Difficile (5 lettres)</option>
+    <option value="6">Très difficile (6 lettres)</option>
+    <option value="7">Expert (7 lettres)</option>
+    <option value="8">Maître (8 lettres)</option>
+  </select>
+  <button onclick="startGame()">Commencer</button>
+
+  <div id="timer">⏱ Temps : 0 s</div>
+  <div id="message">Reconstitue le mot magique !</div>
+
+  <div id="shuffled-letters"></div>
+  <div id="selected-letters"></div>
+
+  <button onclick="submitGuess()">✨ Valider le mot</button>
+  <div id="score"></div>
+  <button onclick="startGame()">🔄 Rejouer</button>
+  <button onclick="window.location.href='carte.html'">← Retour à la carte</button>
+
+  <audio id="sound-win" src="sounds/win.mp3"></audio>
+  <audio id="sound-fail" src="sounds/fail.mp3"></audio>
+
+<script>
+  const mots = {
+    3: ["fée", "clé", "gel", "feu", "dix", "air", "lue", "eau", "bar", "gaz"],
+    4: ["lune", "vent", "ciel", "nuit", "soie", "dôme", "loup", "sort", "bain", "jazz", "bleu"],
+    5: ["bâton", "sorts", "livre", "ombre", "vague", "magie", "lance", "flame", "givre", "brume", "neige", "géode"],
+    6: ["miroir", "secret", "charme", "noyaux", "dragon", "vision", "lueurs", "potion"],
+    7: ["licorne", "magique", "cristal", "sorcier", "étoiles", "grimace", "fantôme", "miroirs", "oracles", "charmes", "formule", "talisman"],
+    8: ["mystique", "formules", "illusion", "enchanté", "chevaler", "légendes", "orangers", "symboles", "agrandir", "montagne", "ensemble"]
+  };
+
+  let motCible = "";
+  let lettresMelangees = [];
+  let lettresChoisies = [];
+  let tentatives = 0;
+  let timer = 0;
+  let timerInterval = null;
+
+  const soundWin = document.getElementById("sound-win");
+  const soundFail = document.getElementById("sound-fail");
+
+  function startGame() {
+    clearInterval(timerInterval);
+    const niveau = parseInt(document.getElementById("difficulty").value);
+    const liste = mots[niveau];
+    motCible = liste[Math.floor(Math.random() * liste.length)];
+    lettresMelangees = shuffleArray([...motCible]);
+    lettresChoisies = [];
+    tentatives = 0;
+    timer = 0;
+
+    document.getElementById("score").textContent = "";
+    document.getElementById("message").textContent = "Reconstitue le mot magique !";
+    updateTimerDisplay();
+
+    updateShuffled();
+    updateSelected();
+
+    timerInterval = setInterval(() => {
+      timer++;
+      updateTimerDisplay();
+    }, 1000);
+  }
+
+  function updateShuffled() {
+    const zone = document.getElementById("shuffled-letters");
+    zone.innerHTML = "";
+    lettresMelangees.forEach((lettre, index) => {
+      const span = document.createElement("span");
+      span.className = "letter";
+      span.textContent = lettre;
+      span.onclick = () => {
+        lettresChoisies.push(lettre);
+        lettresMelangees.splice(index, 1);
+        updateShuffled();
+        updateSelected();
+      };
+      zone.appendChild(span);
+    });
+  }
+
+  function updateSelected() {
+    const zone = document.getElementById("selected-letters");
+    zone.innerHTML = "";
+    lettresChoisies.forEach((lettre, index) => {
+      const span = document.createElement("span");
+      span.className = "letter";
+      span.textContent = lettre;
+      span.onclick = () => {
+        lettresMelangees.push(lettre);
+        lettresChoisies.splice(index, 1);
+        updateShuffled();
+        updateSelected();
+      };
+      zone.appendChild(span);
+    });
+  }
+
+  function submitGuess() {
+    if (lettresChoisies.length !== motCible.length) {
+      document.getElementById("message").textContent = "❗ Tu dois utiliser toutes les lettres pour former le mot.";
+      return;
+    }
+
+    const tentative = lettresChoisies.join("");
+    tentatives++;
+
+    if (tentative === motCible) {
+      clearInterval(timerInterval);
+      const score = Math.max(10, 100 - timer - (tentatives - 1) * 10 + getBonus());
+      document.getElementById("message").textContent = `🌟 Bravo ! Tu as trouvé le mot magique en ${tentatives} tentative(s) !`;
+      document.getElementById("score").textContent = `Score : ${score} points`;
+      soundWin.play();
+      disableLetters();
+      saveProgress(score);
+    } else {
+      document.getElementById("message").textContent = `❌ Mauvais mot (tentative ${tentatives}). Essaie encore !`;
+      soundFail.play();
+      // On remet tout pour rejouer
+      lettresMelangees = lettresMelangees.concat(lettresChoisies);
+      lettresChoisies = [];
+      updateShuffled();
+      updateSelected();
+    }
+  }
+
+  function updateTimerDisplay() {
+    document.getElementById("timer").textContent = `⏱ Temps : ${timer} s`;
+  }
+
+  function disableLetters() {
+    document.querySelectorAll(".letter").forEach(el => {
+      el.style.pointerEvents = "none";
+      el.style.opacity = "0.5";
+    });
+  }
+
+  function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+  
+  function getBonus() {
+    const niveau = parseInt(document.getElementById("difficulty").value);
+    return (niveau - 3) * 5; // 0 pour niveau 3, puis +5 par niveau au-dessus
+  }
+
+
+  function saveProgress(score) {
+    let data = JSON.parse(localStorage.getItem("progressionForetEtoiles") || "{}");
+    data["caverne_glace"] = {
+      terminé: true,
+      score: score,
+      objet: "Lettre enchantée"
+    };
+    localStorage.setItem("progressionForetEtoiles", JSON.stringify(data));
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Carte Magique - Le Monde Enchanté</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Comic Sans MS', cursive;
+      background: #111;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #welcome-msg {
+      color: #f2a365;
+      font-size: 1.5rem;
+      margin-top: 20px;
+      text-align: center;
+      user-select: none;
+    }
+
+    h1 {
+      color: white;
+      margin: 20px;
+      text-align: center;
+    }
+
+    .map-wrapper {
+      position: relative;
+      width: 95vw;
+      max-width: 900px;
+      aspect-ratio: 3 / 2;
+      background: url('img/carte-magique.png') center/contain no-repeat;
+      border: 6px solid #f2a365;
+      border-radius: 20px;
+      box-shadow: 0 0 20px #f2a36588;
+      overflow: hidden;
+    }
+
+    .location {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.9);
+      border: 2px solid #f2a365;
+      border-radius: 12px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      text-align: center;
+      color: #3b1a57;
+      transition: transform 0.2s;
+      user-select: none;
+    }
+
+    .location:hover {
+      background: #f2a365;
+      color: white;
+      transform: translate(-50%, -50%) scale(1.1);
+    }
+
+    .location.completed {
+      background: #d4ffd4;
+      border-color: #4caf50;
+      font-weight: bold;
+      box-shadow: 0 0 8px #4caf50;
+    }
+
+    /* Badge étoile + score */
+    .location .badge {
+      display: inline-flex;
+      align-items: center;
+      margin-top: 4px;
+      font-size: 1.1rem;
+      gap: 6px;
+      color: #4caf50;
+      font-weight: 700;
+    }
+
+    .location .badge .star {
+      color: #f2a365;
+      font-size: 1.3rem;
+      line-height: 1;
+    }
+
+    #inventory {
+      margin: 10px 0;
+      padding: 10px 20px;
+      background: #fff8e6;
+      color: #3b1a57;
+      border-radius: 12px;
+      box-shadow: 0 0 10px #f2a36588;
+      max-width: 500px;
+      text-align: center;
+    }
+
+    #inventory h2 {
+      margin: 0 0 10px;
+      font-size: 1.2rem;
+    }
+
+    #inventory ul {
+      list-style: none;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    #inventory li {
+      background: #f2a36522;
+      border: 1px solid #f2a365;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+    }
+
+    #back-btn, #reset-btn {
+      margin: 20px 0 40px;
+      background: #3b1a57;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 20px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    #back-btn:hover, #reset-btn:hover {
+      background: #4a2677;
+    }
+  </style>
+</head>
+<body>
+  <div id="welcome-msg"></div>
+
+  <h1>🗺️ Carte magique - Le Monde Enchanté</h1>
+
+  <div class="map-wrapper" id="map">
+    <!-- Lieux cliquables -->
+    <div class="location" style="top: 30%; left: 27%;" onclick="goTo('jeu-foret.html')" id="foret_magique">🌳 Forêt magique</div>
+    <div class="location" style="top: 29%; left: 53%;" onclick="goTo('jeu-chateau.html')" id="chateau_volant">🏰 Château volant</div>
+    <div class="location" style="top: 32%; left: 82%;" onclick="goTo('jeu-lutins-nord.html')" id="village_nord">🏘️ Village nord</div>
+    <div class="location" style="top: 53%; left: 25%;" onclick="goTo('jeu-montagne.html')" id="montagne_arc">🌈 Montagne arc-en-ciel</div>
+    <div class="location" style="top: 54%; left: 54%;" onclick="goTo('jeu-lac.html')" id="lac_fee">🧚 Lac aux fées</div>
+    <div class="location" style="top: 57%; left: 80%;" onclick="goTo('jeu-caverne.html')" id="caverne_glace">❄️ Caverne de glace</div>
+    <div class="location" style="top: 86%; left: 22%;" onclick="goTo('jeu-licorne.html')" id="ile_licornes">🦄 Île aux licornes</div>
+    <div class="location" style="top: 83%; left: 50%;" onclick="goTo('jeu-dune.html')" id="dune_chantante">🏜️ Dune chantante</div>
+    <div class="location" style="top: 84%; left: 79%;" onclick="goTo('jeu-lutins-sud.html')" id="village_sud">🏚️ Village sud</div>
+  </div>
+
+  <div id="inventory" style="display: none;">
+    <h2>🎒 Objets magiques collectés :</h2>
+    <ul id="object-list"></ul>
+  </div>
+  
+  <!-- Score Total -->
+  <div id="score-total" style="color: #f2a365; font-size: 1.3rem; margin-top: 10px;">
+    Score total : 0
+  </div>
+
+  <!-- Boutons -->
+  <button id="reset-btn">🔄 Réinitialiser la partie</button>
+  <button id="back-btn">← Retour à l’accueil</button>
+
+  <script>
+    // Récupérer params URL
+    function getQueryParams() {
+      const params = {};
+      window.location.search.substring(1).split("&").forEach(pair => {
+        const [key, value] = pair.split("=");
+        if(key) params[key] = decodeURIComponent(value);
+      });
+      return params;
+    }
+
+    const params = getQueryParams();
+    const name = params.name || "Aventurier";
+    const character = params.character || "";
+
+    // Afficher message de bienvenue
+    const welcomeMsg = document.getElementById("welcome-msg");
+    let charLabel = "";
+    if(character === "fille") charLabel = "aventurière";
+    else if(character === "garçon") charLabel = "aventurier";
+    else charLabel = "";
+
+    welcomeMsg.textContent = `Bienvenue ${charLabel} ${name} dans Le Monde Enchanté !`;
+
+    // Boutons
+    document.getElementById("back-btn").addEventListener("click", () => {
+      window.location.href = "index.html";
+    });
+
+    document.getElementById("reset-btn").addEventListener("click", () => {
+      localStorage.removeItem("progressionForetEtoiles");
+      window.location.reload();
+    });
+
+    function goTo(url) {
+      window.location.href = url;
+    }
+
+    function afficherProgression() {
+      const data = JSON.parse(localStorage.getItem("progressionForetEtoiles") || "{}");
+      const objectList = document.getElementById("object-list");
+      let objets = [];
+
+      for (const id in data) {
+        const lieu = document.getElementById(id);
+        if (lieu && data[id].terminé) {
+          lieu.classList.add("completed");
+
+          // Gérer badge étoile + score
+          let badge = lieu.querySelector(".badge");
+          if (!badge) {
+            badge = document.createElement("span");
+            badge.className = "badge";
+            lieu.appendChild(badge);
+          }
+          // Contenu badge : étoile + score (vide si pas de score)
+          badge.innerHTML = `<span class="star">⭐</span> ${data[id].score ?? ''}`;
+
+          if (data[id].objet) {
+            objets.push(data[id].objet);
+          }
+        }
+      }
+
+      if (objets.length > 0) {
+        document.getElementById("inventory").style.display = "block";
+        objectList.innerHTML = "";
+        objets.forEach(objet => {
+          const li = document.createElement("li");
+          li.textContent = objet;
+          objectList.appendChild(li);
+        });
+      } else {
+        document.getElementById("inventory").style.display = "none";
+      }
+    }
+
+    afficherProgression();
+	
+	function calculerScoreTotal() {
+	  const data = JSON.parse(localStorage.getItem("progressionForetEtoiles") || "{}");
+	  let total = 0;
+	  for (const id in data) {
+		if (data[id].terminé && typeof data[id].score === 'number') {
+		  total += data[id].score;
+		}
+	  }
+	  return total;
+	}
+
+	function afficherScoreTotal() {
+	  const total = calculerScoreTotal();
+	  const elt = document.getElementById("score-total");
+	  elt.textContent = `Score total : ${total}`;
+	}
+
+	afficherScoreTotal();
+
+  </script>
+</body>
+</html>
