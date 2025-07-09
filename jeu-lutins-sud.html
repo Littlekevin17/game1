@@ -292,7 +292,7 @@
 
     function saveProgress(score, won) {
       let data = JSON.parse(localStorage.getItem("progressionForetEtoiles") || "{}");
-      data["lutins_sud"] = {
+      data["village_sud"] = {
         terminé: won,
         score: score,
         objet: won ? "Chaudron sucré" : null
@@ -333,9 +333,9 @@
     startBtn.addEventListener('click', startGame);
     document.getElementById('back-btn').addEventListener('click', () => {
       let data = JSON.parse(localStorage.getItem("progressionForetEtoiles") || "{}");
-      let current = data["lutins_sud"] || { terminé: false, score: 0, objet: null };
+      let current = data["village_sud"] || { terminé: false, score: 0, objet: null };
       if (score > current.score || current.objet === null) {
-        data["lutins_sud"] = {
+        data["village_sud"] = {
           terminé: current.objet ? true : false,
           score: score,
           objet: current.objet || null
