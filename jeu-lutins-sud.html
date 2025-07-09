@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jeu des Lutins du Sud - Course à la confiture</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Comic Sans MS', cursive;
+      background: linear-gradient(to bottom, #a8e063, #56ab2f);
+      color: #222;
+      height: 100%;
+      overflow: hidden;
+    }
+    #wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 0;
+      height: 100%;
+      box-sizing: border-box;
+    }
+    #score-timer-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 800px;
+      max-width: 95vw;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    #scoreboard, #timer {
+      font-size: 1.4rem;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px #fff;
+    }
+    #controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    #difficulty-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+    #game-container {
+      position: relative;
+      width: 800px;
+      height: 800px;
+      background: #1c1c1c;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 0 20px #00000055;
+      display: grid;
+      grid-template-columns: repeat(20, 1fr);
+      grid-template-rows: repeat(20, 1fr);
+    }
+    .cell {
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+    }
+    .wall {
+      background: #3333aa;
+    }
+    .dot {
+      background: url('img/confiture.png') no-repeat center/60%;
+    }
+    .player {
+      background: url('img/lutin.png') no-repeat center/contain;
+    }
+    .enemy {
+      background: url('img/enemy.png') no-repeat center/contain;
+    }
+    #message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255,255,255,0.95);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 0 10px #00000088;
+      z-index: 10;
+      display: none;
+      text-align: center;
+    }
+    #start-btn, #back-btn, .level-btn, #replay-btn {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    #start-btn {
+      background: #ff9800;
+      color: white;
+    }
+    #start-btn:hover, #replay-btn:hover {
+      background: #e67e22;
+    }
+    #back-btn {
+      background: #2e7d32;
+      color: white;
+    }
+    #back-btn:hover {
+      background: #388e3c;
+    }
+    .level-btn {
+      background: #9ccc65;
+    }
+    .level-btn:hover {
+      background: #8bc34a;
+    }
+    .selected-level {
+      outline: 3px solid #ff9800;
+    }
+    #replay-btn {
+      background: #ff9800;
+      color: white;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div id="wrapper">
+    <div id="score-timer-bar">
+      <div id="scoreboard">Score : 0</div>
+      <div id="timer">Temps : 60s</div>
+    </div>
+    <div id="controls">
+      <div id="difficulty-buttons">
+        <button class="level-btn" onclick="setDifficulty(1, this)">Facile</button>
+        <button class="level-btn" onclick="setDifficulty(2, this)">Moyen</button>
+        <button class="level-btn" onclick="setDifficulty(3, this)">Difficile</button>
+        <button class="level-btn" onclick="setDifficulty(4, this)">Très difficile</button>
+      </div>
+      <button id="start-btn" style="display:none;">Commencer la récolte !</button>
+    </div>
+    <div id="game-container"></div>
+    <div id="message"></div>
+    <button id="back-btn">&larr; Retour à la carte</button>
+  </div>
+
+  <script>
+    const gameContainer = document.getElementById("game-container");
+    const scoreboard = document.getElementById("scoreboard");
+    const timerDisplay = document.getElementById("timer");
+    const message = document.getElementById("message");
+    const startBtn = document.getElementById("start-btn");
+
+    const gridSize = 20;
+    let grid = [];
+    let playerPos = { x: 1, y: 1 };
+    let enemies = [];
+    let score = 0;
+    let timer = 60;
+    let gameInterval, timerInterval;
+    let enemyInterval;
+    let difficulty = 1;
+    let selectedButton = null;
+    let gameEnded = false;
+
+    const directions = {
+      ArrowUp: { x: 0, y: -1 },
+      ArrowDown: { x: 0, y: 1 },
+      ArrowLeft: { x: -1, y: 0 },
+      ArrowRight: { x: 1, y: 0 }
+    };
+
+    function setDifficulty(level, button) {
+      difficulty = level;
+      startBtn.style.display = 'inline-block';
+      if (selectedButton) selectedButton.classList.remove('selected-level');
+      button.classList.add('selected-level');
+      selectedButton = button;
+    }
+
+    function createGrid() {
+      gameContainer.innerHTML = '';
+      grid = [];
+      for (let y = 0; y < gridSize; y++) {
+        for (let x = 0; x < gridSize; x++) {
+          const cell = document.createElement('div');
+          cell.classList.add('cell');
+          if (x === 0 || y === 0 || x === gridSize - 1 || y === gridSize - 1 || (Math.random() < 0.1 && !(x === 1 && y === 1))) {
+            cell.classList.add('wall');
+            grid.push('wall');
+          } else {
+            cell.classList.add('dot');
+            grid.push('dot');
+          }
+          gameContainer.appendChild(cell);
+        }
+      }
+    }
+
+    function index(x, y) {
+      return y * gridSize + x;
+    }
+
+    function updateEntities() {
+      if (gameEnded) return;
+      gameContainer.querySelectorAll('.player').forEach(el => el.classList.remove('player'));
+      gameContainer.querySelectorAll('.enemy').forEach(el => el.classList.remove('enemy'));
+      gameContainer.children[index(playerPos.x, playerPos.y)].classList.add('player');
+      enemies.forEach(e => gameContainer.children[index(e.x, e.y)].classList.add('enemy'));
+    }
+
+    function movePlayer(dir) {
+      if (gameEnded) return;
+      const newX = playerPos.x + dir.x;
+      const newY = playerPos.y + dir.y;
+      if (grid[index(newX, newY)] !== 'wall') {
+        playerPos = { x: newX, y: newY };
+        const i = index(newX, newY);
+        if (grid[i] === 'dot') {
+          score += 0.5;
+          grid[i] = 'empty';
+          gameContainer.children[i].classList.remove('dot');
+          updateScore();
+        }
+        updateEntities();
+        checkCollision();
+      }
+    }
+
+    function moveEnemies() {
+      if (gameEnded) return;
+      enemies.forEach((enemy) => {
+        const dx = playerPos.x - enemy.x;
+        const dy = playerPos.y - enemy.y;
+        const possibleMoves = [];
+        if (dx !== 0) possibleMoves.push({ x: Math.sign(dx), y: 0 });
+        if (dy !== 0) possibleMoves.push({ x: 0, y: Math.sign(dy) });
+        for (let i = possibleMoves.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [possibleMoves[i], possibleMoves[j]] = [possibleMoves[j], possibleMoves[i]];
+        }
+        for (const move of possibleMoves) {
+          const newX = enemy.x + move.x;
+          const newY = enemy.y + move.y;
+          if (grid[index(newX, newY)] !== 'wall') {
+            enemy.x = newX;
+            enemy.y = newY;
+            break;
+          }
+        }
+      });
+      updateEntities();
+      checkCollision();
+    }
+
+    function checkCollision() {
+      for (const enemy of enemies) {
+        if (playerPos.x === enemy.x && playerPos.y === enemy.y) {
+          endGame(false);
+        }
+      }
+    }
+
+    function updateScore() {
+      scoreboard.textContent = `Score : ${Math.floor(score)}`;
+    }
+
+    function updateTimer() {
+      timerDisplay.textContent = `Temps : ${timer}s`;
+    }
+
+    function endGame(won = true) {
+      gameEnded = true;
+      clearInterval(gameInterval);
+      clearInterval(timerInterval);
+      clearInterval(enemyInterval);
+      const bonus = won ? (difficulty - 1) * 5 : 0;
+      score += bonus;
+      message.style.display = 'block';
+      message.innerHTML = won ?
+        `<h3>Bravo !</h3><p>Tu as récolté ${Math.floor(score)} pots de confiture !</p><p>Tu gagnes le <strong>Chaudron sucré</strong> ✨</p><p>Bonus difficulté : ${bonus} pts</p><button id='replay-btn'>Rejouer</button>` :
+        `<h3>Oh non !</h3><p>Un lutin glouton t'a attrapé !</p><p>Score : ${Math.floor(score)}</p><button id='replay-btn'>Rejouer</button>`;
+      document.getElementById("difficulty-buttons").style.display = "flex";
+      saveProgress(Math.floor(score), won);
+      document.getElementById('replay-btn').addEventListener('click', startGame);
+    }
+
+    function saveProgress(score, won) {
+      let data = JSON.parse(localStorage.getItem("progressionForetEtoiles") || "{}");
+      data["lutins_sud"] = {
+        terminé: won,
+        score: score,
+        objet: won ? "Chaudron sucré" : null
+      };
+      localStorage.setItem("progressionForetEtoiles", JSON.stringify(data));
+    }
+
+    function startGame() {
+      score = 0;
+      timer = 60;
+      gameEnded = false;
+      playerPos = { x: 1, y: 1 };
+      enemies = [];
+      for (let i = 0; i < difficulty; i++) {
+        enemies.push({ x: 18 - i, y: 18 });
+      }
+      startBtn.style.display = 'none';
+      document.getElementById("difficulty-buttons").style.display = "none";
+      message.style.display = 'none';
+      createGrid();
+      updateScore();
+      updateTimer();
+      updateEntities();
+      timerInterval = setInterval(() => {
+        timer--;
+        updateTimer();
+        if (timer <= 0) endGame(true);
+      }, 1000);
+      enemyInterval = setInterval(moveEnemies, 600);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (directions[e.key]) {
+        movePlayer(directions[e.key]);
+      }
+    });
+
+    startBtn.addEventListener('click', startGame);
+    document.getElementById('back-btn').addEventListener('click', () => {
+      let data = JSON.parse(localStorage.getItem("progressionForetEtoiles") || "{}");
+      let current = data["lutins_sud"] || { terminé: false, score: 0, objet: null };
+      if (score > current.score || current.objet === null) {
+        data["lutins_sud"] = {
+          terminé: current.objet ? true : false,
+          score: score,
+          objet: current.objet || null
+        };
+        localStorage.setItem("progressionForetEtoiles", JSON.stringify(data));
+      }
+      window.location.href = 'carte.html';
+    });
+  </script>
+</body>
+</html>
