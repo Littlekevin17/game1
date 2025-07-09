@@ -65,6 +65,37 @@
     #submit-btn:hover, #reset-btn:hover, #back-btn:hover {
       background: #4a2677;
     }
+	@media (max-width: 600px) {
+	  #color-buttons {
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 10px;
+	  }
+	  .color-btn {
+		width: 35px;
+		height: 35px;
+		margin: 5px 0;
+	  }
+	  body {
+		padding: 5vw;
+	  }
+	  #submit-btn, #reset-btn, #back-btn {
+		width: 90vw;
+		max-width: 350px;
+		font-size: 1.1rem;
+		margin: 8px 0;
+	  }
+	  h1 {
+		font-size: 1.2rem;
+	  }
+	  #message {
+		font-size: 1rem;
+		margin: 10px 0;
+	  }
+	  #difficulty {
+		font-size: 0.95rem;
+	  }
+	}
   </style>
 </head>
 <body>

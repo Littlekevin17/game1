@@ -28,7 +28,6 @@
       overflow: hidden;
       border-radius: 20px;
       box-shadow: 0 0 20px #000000aa;
-      touch-action: none;
     }
 
     #licorne {
@@ -39,7 +38,6 @@
       height: 80px;
       background: url('img/licorne.png') no-repeat center/contain;
       pointer-events: none;
-      transition: left 0.1s;
     }
 
     .etoile, .obstacle {
@@ -64,30 +62,28 @@
       font-size: 1.4rem;
       font-weight: bold;
       text-shadow: 1px 1px 3px #000;
-      z-index: 10;
     }
 
     #scoreboard { left: 20px; }
     #timer { right: 20px; }
 
-    #message {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 1.1rem;
-      font-weight: normal;
-      color: #222;
-      background: rgba(255, 255, 255, 0.95);
-      padding: 20px 25px;
-      border-radius: 15px;
-      text-align: left;
-      max-width: 400px;
-      box-shadow: 0 0 15px #00000033;
-      display: none;
-      line-height: 1.5;
-      z-index: 20;
-    }
+	#message {
+	  position: absolute;
+	  top: 50%;
+	  left: 50%;
+	  transform: translate(-50%, -50%);
+	  font-size: 1.1rem;
+	  font-weight: normal;
+	  color: #222;
+	  background: rgba(255, 255, 255, 0.95);
+	  padding: 20px 25px;
+	  border-radius: 15px;
+	  text-align: left;
+	  max-width: 400px;
+	  box-shadow: 0 0 15px #00000033;
+	  display: none;
+	  line-height: 1.5;
+	}
 
     #start-btn {
       position: absolute;
@@ -101,7 +97,7 @@
       background: #ff6f61;
       color: white;
       cursor: pointer;
-      z-index: 21;
+      z-index: 5;
     }
 
     #start-btn:hover {
@@ -158,59 +154,6 @@
     #back-btn:hover {
       background: #4a2677;
     }
-
-    /* Responsive */
-    @media (max-width: 600px) {
-      #game-container {
-        width: 98vw;
-        height: 70vw;
-        max-width: 400px;
-        max-height: 320px;
-        min-width: 250px;
-        min-height: 200px;
-        border-radius: 15px;
-      }
-      #licorne {
-        width: 40px;
-        height: 40px;
-        bottom: 6px;
-      }
-      .etoile, .obstacle {
-        width: 20px;
-        height: 20px;
-        top: -20px;
-      }
-      #scoreboard, #timer {
-        font-size: 1rem;
-        top: 8px;
-      }
-      #scoreboard { left: 10px; }
-      #timer { right: 10px; }
-      #message {
-        max-width: 90vw;
-        font-size: 1rem;
-        padding: 12px 10px;
-      }
-      #start-btn {
-        font-size: 1.1rem;
-        padding: 10px 10vw;
-        top: 10%;
-      }
-      #game-rules {
-        width: 90vw;
-        max-width: 350px;
-        font-size: 0.9rem;
-        top: 32%;
-        padding: 10px 3vw;
-      }
-      #back-btn {
-        width: 90vw;
-        max-width: 340px;
-        font-size: 1rem;
-        padding: 10px 0;
-        margin: 20px 0 40px;
-      }
-    }
   </style>
 </head>
 <body>
@@ -252,11 +195,13 @@
     const startBtn = document.getElementById("start-btn");
     const gameRules = document.getElementById("game-rules");
 
-    let width, height;
-    let licorneX;
+    let width = 1000, height = 800;
+    let licorneX = 460;
+
     let score = 0;
     let timer = 30;
     let gameInterval, spawnInterval, timerInterval;
+
     let keys = { left: false, right: false };
 
     const etoilePoints = { type1: 1, type2: 3, type3: 5 };
@@ -265,31 +210,21 @@
     let starTypes = { type1: 0, type2: 0, type3: 0 };
     let obstacleTypes = { type1: 0, type2: 0, type3: 0 };
 
-    // Met à jour la taille du jeu en fonction de l'écran
-    function updateDimensions() {
-      width = gameContainer.clientWidth;
-      height = gameContainer.clientHeight;
-    }
-
     function createFallingElement(type) {
-      updateDimensions();
       const el = document.createElement("div");
       el.classList.add(type);
       const t = "type" + (Math.floor(Math.random() * 3) + 1);
       el.dataset.type = t;
-      el.style.left = Math.random() * (width - el.offsetWidth) + "px";
+      el.style.left = Math.random() * (width - 40) + "px";
       el.speed = 2 + Math.random() * 3;
       gameContainer.appendChild(el);
       return el;
     }
 
     function startGame() {
-      updateDimensions();
       score = 0;
       timer = 30;
-      licorneX = width / 2 - licorne.offsetWidth / 2;
-      licorne.style.left = licorneX + "px";
-      licorne.style.bottom = licorne.offsetHeight < 80 ? "6px" : "20px";
+      licorneX = 460;
       updateScore();
       updateTimer();
       message.style.display = "none";
@@ -314,11 +249,10 @@
     }
 
     function updateGame() {
-      updateDimensions();
       moveLicorne();
 
       document.querySelectorAll(".etoile").forEach(star => {
-        let top = parseFloat(star.style.top || -star.offsetHeight);
+        let top = parseFloat(star.style.top || -40);
         top += star.speed;
         star.style.top = top + "px";
 
@@ -333,7 +267,7 @@
       });
 
       document.querySelectorAll(".obstacle").forEach(obs => {
-        let top = parseFloat(obs.style.top || -obs.offsetHeight);
+        let top = parseFloat(obs.style.top || -40);
         top += obs.speed;
         obs.style.top = top + "px";
 
@@ -349,10 +283,8 @@
     }
 
     function moveLicorne() {
-      updateDimensions();
-      const licorneWidth = licorne.offsetWidth;
       if (keys.left) licorneX = Math.max(0, licorneX - 8);
-      if (keys.right) licorneX = Math.min(width - licorneWidth, licorneX + 8);
+      if (keys.right) licorneX = Math.min(width - 80, licorneX + 8);
       licorne.style.left = licorneX + "px";
     }
 
@@ -375,28 +307,29 @@
       clearInterval(spawnInterval);
       clearInterval(timerInterval);
 
-      let html = `<h3>⏳ Temps écoulé !</h3>`;
-      html += `<p><strong>⭐ Score final : ${score}</strong></p>`;
+		let html = `<h3>⏳ Temps écoulé !</h3>`;
+		html += `<p><strong>⭐ Score final : ${score}</strong></p>`;
 
-      html += `<p>✨ Étoiles attrapées :</p><ul>`;
-      for (let type in starTypes) {
-        if (starTypes[type] > 0) {
-          html += `<li><img src="img/etoile${type.slice(-1)}.png" width="24" style="vertical-align: middle" />
-           × ${starTypes[type]} × ${etoilePoints[type]} pts = <strong>${starTypes[type] * etoilePoints[type]}</strong> pts</li>`;
-        }
-      }
-      html += `</ul>`;
+		html += `<p>✨ Étoiles attrapées :</p><ul>`;
+		for (let type in starTypes) {
+		  if (starTypes[type] > 0) {
+			html += `<li><img src="img/etoile${type.slice(-1)}.png" width="24" style="vertical-align: middle" />
+					 × ${starTypes[type]} × ${etoilePoints[type]} pts = <strong>${starTypes[type] * etoilePoints[type]}</strong> pts</li>`;
+		  }
+		}
+		html += `</ul>`;
 
-      html += `<p>💥 Obstacles touchés :</p><ul>`;
-      for (let type in obstacleTypes) {
-        if (obstacleTypes[type] > 0) {
-          html += `<li><img src="img/obstacle${type.slice(-1)}.png" width="24" style="vertical-align: middle" />
-           × ${obstacleTypes[type]} × -${obstaclePoints[type]} pts = <strong>-${obstacleTypes[type] * obstaclePoints[type]}</strong> pts</li>`;
-        }
-      }
-      html += `</ul>`;
+		html += `<p>💥 Obstacles touchés :</p><ul>`;
+		for (let type in obstacleTypes) {
+		  if (obstacleTypes[type] > 0) {
+			html += `<li><img src="img/obstacle${type.slice(-1)}.png" width="24" style="vertical-align: middle" />
+					 × ${obstacleTypes[type]} × -${obstaclePoints[type]} pts = <strong>-${obstacleTypes[type] * obstaclePoints[type]}</strong> pts</li>`;
+		  }
+		}
+		html += `</ul>`;
 
-      message.innerHTML = html;
+message.innerHTML = html;
+
       message.style.display = "block";
       startBtn.style.display = "block";
 
@@ -413,7 +346,7 @@
       localStorage.setItem("progressionForetEtoiles", JSON.stringify(progress));
     }
 
-    // Contrôles clavier
+    // Contrôles
     window.addEventListener("keydown", e => {
       if (e.key === "ArrowLeft") keys.left = true;
       if (e.key === "ArrowRight") keys.right = true;
@@ -422,54 +355,18 @@
       if (e.key === "ArrowLeft") keys.left = false;
       if (e.key === "ArrowRight") keys.right = false;
     });
-
-    // Contrôle souris
     window.addEventListener("mousemove", e => {
       const rect = gameContainer.getBoundingClientRect();
       let x = e.clientX - rect.left;
-      licorneX = Math.min(Math.max(0, x - licorne.offsetWidth / 2), width - licorne.offsetWidth);
+      licorneX = Math.min(Math.max(0, x - 40), width - 80);
       licorne.style.left = licorneX + "px";
     });
-
-    // Contrôle tactile (glisser la licorne avec le doigt)
-    let touchActive = false;
-    gameContainer.addEventListener("touchstart", function(e) {
-      if (e.touches.length === 1) {
-        touchActive = true;
-        moveLicorneTouch(e.touches[0]);
-      }
-    });
-    gameContainer.addEventListener("touchmove", function(e) {
-      if (touchActive && e.touches.length === 1) {
-        moveLicorneTouch(e.touches[0]);
-      }
-    });
-    gameContainer.addEventListener("touchend", function() {
-      touchActive = false;
-    });
-    function moveLicorneTouch(touch) {
-      const rect = gameContainer.getBoundingClientRect();
-      let x = touch.clientX - rect.left;
-      licorneX = Math.min(Math.max(0, x - licorne.offsetWidth / 2), width - licorne.offsetWidth);
-      licorne.style.left = licorneX + "px";
-    }
 
     // Boutons
     startBtn.addEventListener("click", startGame);
     document.getElementById("back-btn").addEventListener("click", () => {
       window.location.href = "carte.html";
     });
-
-    // Ajuste la taille du jeu au chargement et au redimensionnement
-    window.addEventListener("resize", () => {
-      updateDimensions();
-      licorneX = Math.min(Math.max(0, licorneX), width - licorne.offsetWidth);
-      licorne.style.left = licorneX + "px";
-    });
-    // Initialisation
-    updateDimensions();
-    licorneX = width / 2 - (licorne ? licorne.offsetWidth / 2 : 40);
-    licorne.style.left = licorneX + "px";
   </script>
 </body>
 </html>

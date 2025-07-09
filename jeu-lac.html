@@ -90,6 +90,54 @@
       min-height: 4rem;
       white-space: pre-line;
     }
+	@media (max-width: 600px) {
+	  body {
+		padding: 4vw;
+	  }
+	  h1 {
+		font-size: 1.1rem;
+	  }
+	  #message, #final-score {
+		font-size: 1rem;
+		margin: 8px 0;
+	  }
+	  #difficulty {
+		font-size: 0.95rem;
+		margin-bottom: 12px;
+	  }
+	  .symbols {
+		gap: 8px;
+		flex-wrap: wrap;
+		justify-content: center;
+		margin-bottom: 12px;
+	  }
+	  .symbol {
+		font-size: 1.5rem;
+		padding: 3px;
+		border-radius: 8px;
+		min-width: 35px;
+		min-height: 35px;
+	  }
+	  #guess-display {
+		gap: 6px;
+		font-size: 1.5rem;
+		min-height: 2.2rem;
+		margin-bottom: 8px;
+	  }
+	  button {
+		width: 90vw;
+		max-width: 340px;
+		font-size: 1rem;
+		margin: 6px 0;
+		min-width: unset;
+		padding: 10px 0;
+	  }
+	  .attempts {
+		font-size: 0.95rem;
+		min-height: 2.5rem;
+		margin-top: 10px;
+	  }
+	}
   </style>
 </head>
 <body>
