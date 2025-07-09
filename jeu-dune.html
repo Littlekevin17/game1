@@ -26,6 +26,7 @@
       border-radius: 20px;
       overflow: hidden;
       box-shadow: 0 0 20px #00000055;
+      touch-action: none;
     }
     #scarabee {
       position: absolute;
@@ -44,16 +45,15 @@
     .perle[data-type="1"] { background: url('img/perle1.png') no-repeat center/contain; }
     .perle[data-type="2"] { background: url('img/perle2.png') no-repeat center/contain; }
     .perle[data-type="3"] { background: url('img/perle3.png') no-repeat center/contain; }
-
     .obstacle[data-type="1"] { background: url('img/rocher1.png') no-repeat center/contain; }
     .obstacle[data-type="2"] { background: url('img/rocher2.png') no-repeat center/contain; }
-
     #scoreboard, #timer {
       position: absolute;
       top: 10px;
       font-size: 1.4rem;
       font-weight: bold;
       text-shadow: 1px 1px 3px #fff;
+      z-index: 10;
     }
     #scoreboard { left: 20px; }
     #timer { right: 20px; }
@@ -69,6 +69,7 @@
       display: none;
       max-width: 400px;
       text-align: left;
+      z-index: 20;
     }
     #start-btn {
       position: absolute;
@@ -80,7 +81,7 @@
       color: white;
       border-radius: 15px;
       cursor: pointer;
-      z-index: 5;
+      z-index: 21;
     }
     #start-btn:hover { background: #e67e22; }
     #back-btn {
@@ -94,6 +95,62 @@
       cursor: pointer;
     }
     #back-btn:hover { background: #926f3d; }
+
+    /* Responsive mobile */
+    @media (max-width: 600px) {
+      #game-container {
+        width: 98vw;
+        height: 70vh;
+        max-width: 590px;
+        max-height: 98vh;
+        min-width: 250px;
+        min-height: 250px;
+        border-radius: 15px;
+      }
+      #scarabee {
+        width: 40px;
+        height: 40px;
+        bottom: 8px;
+        left: 45vw;
+      }
+      .perle, .obstacle {
+        width: 20px;
+        height: 20px;
+        top: -20px;
+      }
+      #scoreboard, #timer {
+        font-size: 1rem;
+        top: 8px;
+      }
+      #scoreboard { left: 10px; }
+      #timer { right: 10px; }
+      #message {
+        width: 90%;	  
+        max-width: 95%;
+        font-size: 0.97rem;
+        padding: 7vw 3vw 7vw 3vw;
+        border-radius: 11px;
+        left: 50%;
+        top: 62%;
+        transform: translate(-50%, -50%);
+        word-break: break-word;
+      }
+      #start-btn {
+        font-size: 1.1rem;
+        padding: 10px 10vw;
+        top: 12%;
+        width: 90vw;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      #back-btn {
+        width: 90vw;
+        max-width: 340px;
+        font-size: 1rem;
+        padding: 10px 0;
+        margin: 20px 0 0 0;
+      }
+    }
   </style>
 </head>
 <body>
@@ -126,10 +183,17 @@
     const perlePoints = { 1: 1, 2: 3, 3: 5 };
     const obstaclePoints = { 1: 2, 2: 4 };
 
+    function updateDimensions() {
+      width = container.clientWidth;
+      height = container.clientHeight;
+    }
+
     function startGame() {
+      updateDimensions();
       score = 0;
       timer = 30;
-      scarabeeX = 460;
+      scarabeeX = width / 2 - scarabee.offsetWidth / 2;
+      scarabee.style.left = scarabeeX + "px";
       message.style.display = "none";
       startBtn.style.display = "none";
       container.querySelectorAll('.perle, .obstacle').forEach(e => e.remove());
@@ -145,20 +209,22 @@
     }
 
     function spawnElement() {
+      updateDimensions();
       const el = document.createElement("div");
       const isPerle = Math.random() < 0.7;
       const type = isPerle ? Math.ceil(Math.random()*3) : Math.ceil(Math.random()*2);
       el.classList.add(isPerle ? "perle" : "obstacle");
       el.dataset.type = type;
-      el.style.left = Math.random() * (width - 40) + "px";
-      el.style.top = "-40px";
+      el.style.left = Math.random() * (width - (el.offsetWidth || 40)) + "px";
+      el.style.top = isPerle || el.classList.contains("perle") ? "-40px" : "-20px";
       el.speed = 2 + Math.random()*3;
       container.appendChild(el);
     }
 
     function updateGame() {
+      updateDimensions();
       if (keys.left) scarabeeX = Math.max(0, scarabeeX - 8);
-      if (keys.right) scarabeeX = Math.min(width - 80, scarabeeX + 8);
+      if (keys.right) scarabeeX = Math.min(width - scarabee.offsetWidth, scarabeeX + 8);
       scarabee.style.left = scarabeeX + "px";
 
       container.querySelectorAll(".perle, .obstacle").forEach(el => {
@@ -225,9 +291,21 @@
     window.addEventListener("mousemove", e => {
       const rect = container.getBoundingClientRect();
       let x = e.clientX - rect.left;
-      scarabeeX = Math.min(Math.max(0, x - 40), width - 80);
+      scarabeeX = Math.min(Math.max(0, x - scarabee.offsetWidth / 2), width - scarabee.offsetWidth);
       scarabee.style.left = scarabeeX + "px";
     });
+
+    // Responsive : ajuste la position/scarabée au resize
+    window.addEventListener("resize", () => {
+      updateDimensions();
+      scarabeeX = Math.min(Math.max(0, scarabeeX), width - scarabee.offsetWidth);
+      scarabee.style.left = scarabeeX + "px";
+    });
+
+    // Initialisation responsive
+    updateDimensions();
+    scarabeeX = width / 2 - (scarabee ? scarabee.offsetWidth / 2 : 40);
+    scarabee.style.left = scarabeeX + "px";
   </script>
 </body>
 </html>

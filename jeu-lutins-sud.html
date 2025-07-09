@@ -127,6 +127,100 @@
       color: white;
       display: inline-block;
     }
+    /* Contrôles tactiles */
+    #mobile-controls {
+      display: none;
+      margin: 10px 0 0 0;
+      user-select: none;
+    }
+    #mobile-controls .ctrl-row {
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      margin-bottom: 5px;
+    }
+    .ctrl-btn {
+      width: 56px;
+      height: 56px;
+      font-size: 2rem;
+      border-radius: 50%;
+      border: 2px solid #ff9800;
+      background: #fff9e5;
+      color: #ff9800;
+      box-shadow: 0 2px 6px #0001;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      outline: none;
+      touch-action: manipulation;
+    }
+    .ctrl-btn:active {
+      background: #ff9800;
+      color: #fff;
+    }
+    @media (max-width: 600px) {
+      #score-timer-bar {
+        width: 98vw;
+        max-width: 99vw;
+        padding: 6px 0;
+        font-size: 1rem;
+        flex-direction: column;
+        gap: 3px;
+      }
+      #scoreboard, #timer {
+        font-size: 1.05rem;
+      }
+      #controls {
+        margin-bottom: 10px;
+      }
+      #difficulty-buttons {
+        gap: 7px;
+        margin-bottom: 7px;
+        flex-wrap: wrap;
+      }
+      #game-container {
+        width: 98vw;
+        height: 98vw;
+        max-width: 99vw;
+        max-height: 99vw;
+        min-width: 250px;
+        min-height: 250px;
+        border-radius: 13px;
+        box-shadow: 0 0 10px #00000033;
+        grid-template-columns: repeat(20, 1fr);
+        grid-template-rows: repeat(20, 1fr);
+      }
+      .cell {
+        min-width: 0;
+        min-height: 0;
+      }
+      #message {
+        padding: 6vw 3vw 6vw 3vw;
+        font-size: 0.97rem;
+        border-radius: 13px;
+        max-width: 94vw;
+        box-sizing: border-box;
+      }
+      #start-btn, #back-btn, .level-btn, #replay-btn {
+        width: 90vw;
+        max-width: 340px;
+        font-size: 1rem;
+        padding: 10px 0;
+        border-radius: 14px;
+        margin: 8px auto;
+        display: block;
+      }
+      #back-btn {
+        margin: 16px auto 0 auto;
+      }
+      #mobile-controls {
+        display: block;
+      }
+      .ctrl-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 1.35rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -145,6 +239,17 @@
       <button id="start-btn" style="display:none;">Commencer la récolte !</button>
     </div>
     <div id="game-container"></div>
+    <!-- Contrôles tactiles pour mobile -->
+    <div id="mobile-controls">
+      <div class="ctrl-row">
+        <button class="ctrl-btn" data-dir="ArrowUp" aria-label="Haut">⬆️</button>
+      </div>
+      <div class="ctrl-row">
+        <button class="ctrl-btn" data-dir="ArrowLeft" aria-label="Gauche">⬅️</button>
+        <button class="ctrl-btn" data-dir="ArrowDown" aria-label="Bas">⬇️</button>
+        <button class="ctrl-btn" data-dir="ArrowRight" aria-label="Droite">➡️</button>
+      </div>
+    </div>
     <div id="message"></div>
     <button id="back-btn">&larr; Retour à la carte</button>
   </div>
@@ -155,6 +260,7 @@
     const timerDisplay = document.getElementById("timer");
     const message = document.getElementById("message");
     const startBtn = document.getElementById("start-btn");
+    const mobileControls = document.getElementById("mobile-controls");
 
     const gridSize = 20;
     let grid = [];
@@ -279,6 +385,7 @@
       clearInterval(gameInterval);
       clearInterval(timerInterval);
       clearInterval(enemyInterval);
+      stopMove(); // Arrête tout déplacement mobile
       const bonus = won ? (difficulty - 1) * 5 : 0;
       score += bonus;
       message.style.display = 'block';
@@ -329,6 +436,42 @@
         movePlayer(directions[e.key]);
       }
     });
+
+    // Contrôles tactiles pour mobile - déplacement continu si appui long
+    let moveInterval = null;
+    function startMove(dir) {
+      movePlayer(directions[dir]);
+      moveInterval = setInterval(() => {
+        movePlayer(directions[dir]);
+      }, 120); // vitesse de répétition
+    }
+    function stopMove() {
+      clearInterval(moveInterval);
+      moveInterval = null;
+    }
+
+    function isMobile() {
+      return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+    }
+    if (isMobile()) {
+      mobileControls.style.display = 'block';
+      document.querySelectorAll('.ctrl-btn').forEach(btn => {
+        // Touch events
+        btn.addEventListener('touchstart', e => {
+          startMove(btn.dataset.dir);
+          e.preventDefault();
+        });
+        btn.addEventListener('touchend', stopMove);
+        btn.addEventListener('touchcancel', stopMove);
+        // Mouse events (pour tests sur émulateur)
+        btn.addEventListener('mousedown', e => {
+          startMove(btn.dataset.dir);
+          e.preventDefault();
+        });
+        btn.addEventListener('mouseup', stopMove);
+        btn.addEventListener('mouseleave', stopMove);
+      });
+    }
 
     startBtn.addEventListener('click', startGame);
     document.getElementById('back-btn').addEventListener('click', () => {
