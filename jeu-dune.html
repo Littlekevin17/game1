@@ -187,6 +187,30 @@
       width = container.clientWidth;
       height = container.clientHeight;
     }
+	
+	// Contrôle tactile (glisser le doigt pour déplacer le scarabée)
+	let touchActive = false;
+	let lastTouchX = null;
+
+	container.addEventListener("touchstart", function(e) {
+	  if (e.touches.length === 1) {
+		touchActive = true;
+		lastTouchX = e.touches[0].clientX;
+	  }
+	});
+	container.addEventListener("touchmove", function(e) {
+	  if (touchActive && e.touches.length === 1) {
+		const rect = container.getBoundingClientRect();
+		let x = e.touches[0].clientX - rect.left;
+		scarabeeX = Math.min(Math.max(0, x - scarabee.offsetWidth / 2), width - scarabee.offsetWidth);
+		scarabee.style.left = scarabeeX + "px";
+		lastTouchX = e.touches[0].clientX;
+	  }
+	});
+	container.addEventListener("touchend", function() {
+	  touchActive = false;
+	  lastTouchX = null;
+	});
 
     function startGame() {
       updateDimensions();
