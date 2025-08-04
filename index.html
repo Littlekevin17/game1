@@ -1,301 +1,195 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Le Monde Enchanté - Accueil</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap');
-
-  body {
-    font-family: 'Indie Flower', cursive, 'Comic Sans MS', cursive, sans-serif;
-    background: linear-gradient(to bottom, #a2d5f2, #fceabb);
-    margin: 0; padding: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    height: 100vh;
-    justify-content: center;
-    color: #3b1a57;
-    user-select: none;
-  }
-  h1 {
-    font-size: 3rem;
-    text-shadow: 2px 2px 6px #f2a365;
-    margin-bottom: 20px;
-  }
-  .container {
-    background: #fff0f6cc;
-    border: 3px solid #f2a365;
-    border-radius: 25px;
-    padding: 40px 35px;
-    max-width: 400px;
-    width: 95vw;
-    box-shadow: 0 0 25px #f2a365aa;
-    text-align: center;
-  }
-  label {
-    font-weight: bold;
-    font-size: 1.2rem;
-    margin-bottom: 10px;
-    display: block;
-  }
-  .characters {
-    display: flex;
-    justify-content: center;
-    gap: 40px;
-    margin: 20px 0 30px;
-  }
-  .character {
-    cursor: pointer;
-    border: 3px solid transparent;
-    border-radius: 50%;
-    padding: 10px;
-    width: 120px;
-    height: 120px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: #fceabb;
-    box-shadow: 0 0 12px #f2a365aa;
-    transition: border-color 0.3s, transform 0.3s;
-    font-size: 4rem;
-    user-select: none;
-  }
-  .character.selected {
-    border-color: #f2a365;
-    transform: scale(1.1);
-    box-shadow: 0 0 20px #f2a365ff;
-  }
-  .character span {
-    margin-top: 10px;
-    font-size: 1.3rem;
-    color: #3b1a57;
-  }
-  input[type="text"] {
-    font-size: 1.3rem;
-    padding: 12px;
-    width: 90%;
-    border-radius: 15px;
-    border: 2px solid #f2a365;
-    outline: none;
-    margin-bottom: 25px;
-    text-align: center;
-  }
-  input[type="text"]::placeholder {
-    color: #b4997e;
-  }
-  button#start-btn {
-    font-size: 1.6rem;
-    padding: 15px 40px;
-    border-radius: 30px;
-    background: #3b1a57;
-    color: white;
-    border: none;
-    cursor: pointer;
-    box-shadow: 0 4px 8px #2e1443;
-    transition: background 0.3s;
-  }
-  button#start-btn:disabled {
-    background: #999;
-    cursor: not-allowed;
-    box-shadow: none;
-  }
-  button#start-btn:hover:not(:disabled) {
-    background: #4a2677;
-  }
-  /* Nouveau bouton autres jeux */
-  .other-games-btn {
-    font-size: 1.2rem;
-    padding: 12px 28px;
-    border-radius: 30px;
-    background: #f2a365;
-    color: #3b1a57;
-    border: none;
-    cursor: pointer;
-    margin-top: 18px;
-    margin-bottom: 6px;
-    box-shadow: 0 3px 7px #f2a36566;
-    transition: background 0.2s, color 0.2s;
-    display: block;
-    width: 100%;
-    max-width: 320px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .other-games-btn:hover {
-    background: #f7c791;
-    color: #2e1443;
-  }
-  .music-control {
-    margin-top: 30px;
-    font-size: 1.4rem;
-    color: #3b1a57;
-    cursor: pointer;
-    user-select: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    transition: color 0.3s;
-  }
-  .music-control:hover {
-    color: #f2a365;
-  }
-
-  /* Responsive */
-  @media (max-width: 600px) {
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 12px;
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Jeux en ligne</title>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:700,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <style>
+    :root {
+      --primary: #4f8cff;
+      --secondary: #ffb347;
+      --bg: #f5f7fa;
+      --card-bg: #fff;
+      --card-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      --text: #222;
+      --radius: 18px;
     }
-    .container {
-      padding: 18px 2vw;
-      border-radius: 13px;
-      max-width: 99vw;
-      box-shadow: 0 0 12px #f2a36599;
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      font-family: 'Montserrat', Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
     }
-    .characters {
-      gap: 12vw;
-      margin: 10px 0 18px;
+    header {
+      width: 100%;
+      padding: 32px 0 16px 0;
+      text-align: center;
+      background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+      color: #fff;
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
     }
-    .character {
-      width: 70px;
-      height: 70px;
-      font-size: 2rem;
-      padding: 3px;
-      border-radius: 50%;
+    .game-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 32px;
+      justify-content: center;
+      margin: 48px 0 0 0;
+      padding: 0;
+      width: 100%;
+      max-width: 900px;
     }
-    .character span {
-      margin-top: 5px;
-      font-size: 0.95rem;
+    .game-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--card-shadow);
+      width: 260px;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 32px 24px 24px 24px;
+      transition: transform 0.18s, box-shadow 0.18s;
+      text-align: center;
+      position: relative;
     }
-    label {
+    .game-card:hover, .game-card:focus-within {
+      transform: translateY(-8px) scale(1.03);
+      box-shadow: 0 8px 32px rgba(79,140,255,0.15);
+    }
+    .game-icon {
+      font-size: 3.2rem;
+      margin-bottom: 16px;
+      color: var(--primary);
+      transition: color 0.2s;
+    }
+    .game-card:hover .game-icon, .game-card:focus-within .game-icon {
+      color: var(--secondary);
+    }
+    .game-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+      margin-top: 0;
+    }
+    .game-desc {
       font-size: 1rem;
-      margin-bottom: 5px;
+      color: #555;
+      margin-bottom: 18px;
+      min-height: 44px;
     }
-    input[type="text"] {
+    .game-link {
+      display: inline-block;
+      padding: 10px 24px;
+      border-radius: 30px;
+      background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
       font-size: 1rem;
-      padding: 8px;
-      border-radius: 9px;
-      margin-bottom: 15px;
+      letter-spacing: 1px;
+      transition: background 0.2s, box-shadow 0.2s;
+      box-shadow: 0 2px 8px rgba(79,140,255,0.07);
     }
-    button#start-btn {
-      font-size: 1.1rem;
-      padding: 10px 0;
-      border-radius: 18px;
-      width: 92vw;
-      max-width: 330px;
+    .game-link:hover, .game-link:focus {
+      background: linear-gradient(90deg, var(--secondary) 0%, var(--primary) 100%);
+      box-shadow: 0 4px 16px rgba(255,179,71,0.13);
+      color: #fff;
     }
-    .other-games-btn {
-      font-size: 1rem;
-      padding: 10px 0;
-      border-radius: 18px;
-      width: 92vw;
-      max-width: 330px;
+    @media (max-width: 700px) {
+      .game-list {
+        flex-direction: column;
+        gap: 24px;
+        align-items: center;
+      }
+      .game-card {
+        width: 90vw;
+        max-width: 350px;
+      }
+      header {
+        font-size: 1.4rem;
+        padding: 22px 0 10px 0;
+      }
     }
-    .music-control {
-      font-size: 1.1rem;
-      margin-top: 18px;
-      gap: 6px;
-    }
-  }
-</style>
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Le Monde Enchanté</h1>
-    
-    <label>Choisis ton personnage :</label>
-    <div class="characters">
-      <div class="character" id="char-girl" tabindex="0" role="button" aria-label="Choisir personnage fille">
-        👧
-        <span>Fille</span>
+  <header>
+    Choisis ton jeu&nbsp;!
+  </header>
+  <main>
+    <div class="game-list">
+      <!-- Nouveau jeu externe -->
+      <div class="game-card">
+        <div class="game-icon"><i class="fa-solid fa-gamepad"></i></div>
+        <h2 class="game-title">Jeu Arcade</h2>
+        <div class="game-desc">Un jeu d’arcade fun à découvrir sur une autre plateforme&nbsp;!</div>
+        <a class="game-link" href="https://littlekevin17.github.io/game1/index.html" target="_blank" rel="noopener">Jouer</a>
+      </div>	
+      <div class="game-card">
+        <div class="game-icon"><i class="fa-solid fa-building"></i></div>
+        <h2 class="game-title">Tower Blocks</h2>
+        <div class="game-desc">Empile les blocs le plus haut possible sans les faire tomber&nbsp;!</div>
+        <a class="game-link" href="tower-blocks.html">Jouer</a>
       </div>
-      <div class="character" id="char-boy" tabindex="0" role="button" aria-label="Choisir personnage garçon">
-        👦
-        <span>Garçon</span>
+      <!-- Nouveau jeu : Simon -->
+      <div class="game-card">
+        <div class="game-icon"><i class="fa-solid fa-circle-dot"></i></div>
+        <h2 class="game-title">Simon</h2>
+        <div class="game-desc">Teste ta mémoire et reproduis les séquences de couleurs de plus en plus longues&nbsp;!</div>
+        <a class="game-link" href="simon.html">Jouer</a>
       </div>
-    </div>
-    
-    <label for="input-name">Quel est ton prénom ?</label>
-    <input type="text" id="input-name" placeholder="Écris ton prénom ici" autocomplete="off" />
-
-    <button id="start-btn" disabled>Commencer l’aventure</button>
-    
-    <button id="other-games-btn" class="other-games-btn">Jouer à d'autres jeux</button>
-    
-    <div class="music-control" id="music-control" role="button" tabindex="0" aria-pressed="false">
-      ▶️ Activer la musique
-    </div>
-  </div>
-
-  <audio id="background-music" loop src="sounds/game-music-loop.mp3"></audio>
-
-<script>
-  const charGirl = document.getElementById('char-girl');
-  const charBoy = document.getElementById('char-boy');
-  const inputName = document.getElementById('input-name');
-  const startBtn = document.getElementById('start-btn');
-  const musicControl = document.getElementById('music-control');
-  const bgMusic = document.getElementById('background-music');
-  const otherGamesBtn = document.getElementById('other-games-btn');
-
-  let selectedCharacter = null;
-  let musicPlaying = false;
-
-  function updateStartButton() {
-    startBtn.disabled = !(selectedCharacter && inputName.value.trim().length > 0);
-  }
-
-  function selectCharacter(char) {
-    selectedCharacter = char;
-    if (char === 'fille') {
-      charGirl.classList.add('selected');
-      charBoy.classList.remove('selected');
-    } else {
-      charBoy.classList.add('selected');
-      charGirl.classList.remove('selected');
-    }
-    updateStartButton();
-  }
-
-  charGirl.addEventListener('click', () => selectCharacter('fille'));
-  charBoy.addEventListener('click', () => selectCharacter('garçon'));
-
-  // Navigation clavier
-  charGirl.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') { selectCharacter('fille'); e.preventDefault(); }});
-  charBoy.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') { selectCharacter('garçon'); e.preventDefault(); }});
-
-  inputName.addEventListener('input', updateStartButton);
-
-  startBtn.addEventListener('click', () => {
-   const name = encodeURIComponent(inputName.value.trim());
-   const character = encodeURIComponent(selectedCharacter);
-   window.location.href = `carte.html?name=${name}&character=${character}`;
-  });
-
-  musicControl.addEventListener('click', toggleMusic);
-  musicControl.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') { toggleMusic(); e.preventDefault(); }});
-
-  function toggleMusic() {
-    if (!musicPlaying) {
-      bgMusic.play();
-      musicPlaying = true;
-      musicControl.textContent = '🔇 Couper la musique';
-      musicControl.setAttribute('aria-pressed', 'true');
-    } else {
-      bgMusic.pause();
-      musicPlaying = false;
-      musicControl.textContent = '▶️ Activer la musique';
-      musicControl.setAttribute('aria-pressed', 'false');
-    }
-  }
-
-  // Bouton autres jeux
-  otherGamesBtn.addEventListener('click', function() {
-    window.location.href = "https://littlekevin17.github.io/game2/index.html";
-  });
-</script>
+		<!-- Nouveau jeu Memory F -->
+		<div class="game-card">
+		  <div class="game-icon"><i class="fa-solid fa-flag-checkered"></i></div>
+		  <h2 class="game-title">Memory F1</h2>
+		  <div class="game-desc">Teste ta mémoire avec les symboles et pilotes de Formule 1 !</div>
+		  <a class="game-link" href="memory-game.html">Jouer</a>
+		</div>
+		<!-- Nouveau jeu Mastermind -->
+		<div class="game-card">
+		  <div class="game-icon"><i class="fa-solid fa-brain"></i></div>
+		  <h2 class="game-title">Mastermind</h2>
+		  <div class="game-desc">Développe ta logique en devinant la bonne combinaison de couleurs !</div>
+		  <a class="game-link" href="mastermind.html">Jouer</a>
+		</div>
+		<!-- Nouveau jeu Puissance 4 -->
+		<div class="game-card">
+		  <div class="game-icon"><i class="fa-solid fa-grip-vertical"></i></div>
+		  <h2 class="game-title">Puissance 4</h2>
+		  <div class="game-desc">Aligne quatre jetons de ta couleur avant ton adversaire&nbsp;!</div>
+		  <a class="game-link" href="puissance4.html">Jouer</a>
+		</div>		
+      <!-- Nouveau jeu de F1 ajouté -->
+		<div class="game-card">
+		  <div class="game-icon"><i class="fa-solid fa-flag-checkered"></i></div>
+		  <h2 class="game-title">F1 Race Attack</h2>
+		  <div class="game-desc">Plonge dans la vitesse et l’adrénaline des courses de Formule 1 !</div>
+		  <a class="game-link" href="f1-race-attack.html">Jouer</a>
+		</div>		
+      <div class="game-card">
+        <div class="game-icon"><i class="fa-solid fa-table-cells-large"></i></div>
+        <h2 class="game-title">Tetris Moderne</h2>
+        <div class="game-desc">Le classique intemporel&nbsp;: aligne les formes pour marquer des points.</div>
+        <a class="game-link" href="tetris2.html">Jouer</a>
+      </div>
+      <div class="game-card">
+        <div class="game-icon"><i class="fa-solid fa-table-cells-large"></i></div>
+        <h2 class="game-title">Tetris Basique</h2>
+        <div class="game-desc">Le classique intemporel&nbsp;: aligne les formes pour marquer des points.</div>
+        <a class="game-link" href="tetris.html">Jouer</a>
+      </div>		
+  </main>
 </body>
 </html>
